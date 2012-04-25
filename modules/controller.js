@@ -294,7 +294,10 @@ SuspendTabController.prototype = {
 
 	isSuspended : function(aTab)
 	{
-		return SS.getTabValue(aTab, this.STATE);
+		return (
+			SS.getTabValue(aTab, this.STATE) ||
+			aTab.linkedBrowser.__SS_restoreState == 1
+		);
 	},
 
 	suspend : function(aTab)
