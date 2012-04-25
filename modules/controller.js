@@ -34,7 +34,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 var EXPORTED_SYMBOLS = ['SuspendTabController'];
-var DEBUG = true;
 
 load('lib/WindowManager');
 load('lib/ToolbarItem');
@@ -66,6 +65,11 @@ function SuspendTabController(aWindow)
 SuspendTabController.prototype = {
 	__proto__ : require('const'),
 
+	get debug()
+	{
+		return prefs.getPref(this.domain + 'debug');
+	},
+
 	get autoSuspend()
 	{
 		return prefs.getPref(this.domain + 'autoSuspend.enabled');
@@ -74,9 +78,9 @@ SuspendTabController.prototype = {
 	{
 		return prefs.getPref(this.domain + 'autoSuspend.timeout');
 	},
-	get resetTimersOnReload()
+	get autoSuspendResetOnReload()
 	{
-		return prefs.getPref(this.domain + 'autoSuspend.resetTimersOnReload');
+		return prefs.getPref(this.domain + 'autoSuspend.resetOnReload');
 	},
 
 	get tabs()
@@ -94,11 +98,17 @@ SuspendTabController.prototype = {
 			case 'TabSelect':
 				return this.onTabSelect(aEvent);
 
+			case 'SSTabRestoring':
+				return this.cancelTimer(aEvent.originalTarget);
+
 			case 'SSTabRestored':
 				return this.resume(aEvent.originalTarget);
 
+			case 'DOMTitleChanged':
+				return this.onDOMTitleChanged(aEvent);
+
 			case 'unload':
-				return this.uninit(aEvent.relatedTarget);
+				return this.destroy();
 		}
 	},
 
@@ -115,20 +125,6 @@ SuspendTabController.prototype = {
 		}
 	},
 
-	onStateChange : function(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus)
-	{
-		if (!this.resetTimersOnReload)
-			return;
-
-		Array.some(this.tabs, function(aTab) {
-			if (aTab.linkedBrowser != aBrowser)
-				return false;
-
-			this.reserveSuspend(aTab);
-			return true;
-		}, this);
-	},
-
 	onCommand : function(aEvent)
 	{
 		var tab = aEvent.target.ownerDocument.defaultView.gBrowser.selectedTab;
@@ -141,11 +137,27 @@ SuspendTabController.prototype = {
 	onTabSelect : function(aEvent)
 	{
 		var tab = aEvent.originalTarget;
-		if (DEBUG)
+		if (this.debug)
 			dump('tab '+tab._tPos+' is selected.\n');
 		this.cancelTimer(tab);
 		this.resume(tab);
 		this.setTimers();
+	},
+
+	onDOMTitleChanged : function(aEvent)
+	{
+		if (!this.autoSuspendResetOnReload)
+			return;
+
+		var w = aEvent.target.defaultView.top;
+		Array.some(this.tabs, function(aTab) {
+			if (aTab.linkedBrowser.contentWindow != w)
+				return false;
+
+			if (!aTab.selected)
+				this.reserveSuspend(aTab);
+			return true;
+		}, this);
 	},
 
 	setTimers : function(aReset)
@@ -174,13 +186,13 @@ SuspendTabController.prototype = {
 	cancelTimer : function(aTab)
 	{
 		if (aTab.__suspendtab__timer) {
-			if (DEBUG)
+			if (this.debug)
 				dump(' cancel timer for '+aTab._tPos+'\n');
 			timer.clearTimeout(aTab.__suspendtab__timer);
 			aTab.__suspendtab__timestamp = 0;
 			aTab.__suspendtab__timer = null;
 
-			if (DEBUG && !this.isSuspended(aTab))
+			if (this.debug && !this.isSuspended(aTab))
 				aTab.setAttribute('tooltiptext', aTab.label);
 		}
 	},
@@ -193,20 +205,21 @@ SuspendTabController.prototype = {
 		if (this.isSuspended(aTab))
 			return;
 
-		if (DEBUG)
-			aTab.setAttribute('tooltiptext', aTab.label +' (to be suspended)');
-
-		if (DEBUG)
-			dump(' reserve suspend '+aTab._tPos+'\n');
-
 		var now = Date.now();
-		if (DEBUG) {
+		if (this.debug) {
+			dump(' reserve suspend '+aTab._tPos+'\n');
 			dump('  timestamp = '+timestamp+'\n');
 			dump('  now       = '+now+'\n');
 		}
 		if (timestamp && now - timestamp >= this.autoSuspendTimeout) {
 			dump('  => suspend now!\n');
 			return this.suspend(aTab);
+		}
+
+		if (this.debug) {
+			let date = (new Date(now + this.autoSuspendTimeout));
+			aTab.setAttribute('tooltiptext', aTab.label +' (to be suspended at '+date+')');
+			dump('  => will be suspended at '+date+'\n');
 		}
 
 		aTab.__suspendtab__timestamp = timestamp || now;
@@ -220,11 +233,14 @@ SuspendTabController.prototype = {
 
 	init : function(aWindow)
 	{
+		SuspendTabController.instances.push(this);
+
 		this.window = aWindow;
 		this.window.addEventListener('unload', this, false);
 		this.window.addEventListener('TabSelect', this, true);
+		this.window.addEventListener('SSTabRestoring', this, true);
 		this.window.addEventListener('SSTabRestored', this, true);
-		this.window.gBrowser.addTabsProgressListener(this);
+		this.window.gBrowser.addEventListener('DOMTitleChanged', this, true);
 
 		this.setTimers();
 
@@ -246,25 +262,33 @@ SuspendTabController.prototype = {
 				}
 			}
 		);
-		this.toolbarButton.addEventListener('command', this, false);
+		if (this.toolbarButton.node)
+			this.toolbarButton.addEventListener('command', this, false);
 	},
 
 	destroy : function()
 	{
+		if (!this.window)
+			return;
+
 		this.cancelTimers();
 
 		prefs.removePrefListener(this);
 
 		this.window.removeEventListener('unload', this, false);
 		this.window.removeEventListener('TabSelect', this, true);
+		this.window.removeEventListener('SSTabRestoring', this, true);
 		this.window.removeEventListener('SSTabRestored', this, true);
-		this.window.gBrowser.removeTabsProgressListener(this);
+		this.window.gBrowser.removeEventListener('DOMTitleChanged', this, true);
 
-		this.toolbarButton.removeEventListener('command', this, false);
+		if (this.toolbarButton.node)
+			this.toolbarButton.removeEventListener('command', this, false);
 		this.toolbarButton.destroy();
 		delete this.toolbarButton;
 
 		delete this.window;
+
+		SuspendTabController.instances.splice(SuspendTabController.instances.indexOf(this), 1);
 	},
 
 
@@ -278,7 +302,7 @@ SuspendTabController.prototype = {
 		if (this.isSuspended(aTab))
 			return;
 
-		if (DEBUG)
+		if (this.debug)
 			dump(' suspend '+aTab._tPos+'\n');
 
 		var label = aTab.label;
@@ -292,10 +316,11 @@ SuspendTabController.prototype = {
 		SS.setTabValue(aTab, this.STATE, JSON.stringify(partialState));
 
 		var browser = aTab.linkedBrowser;
+		var self = this;
 		browser.addEventListener('load', function() {
 			browser.removeEventListener('load', arguments.callee, true);
 			aTab.setAttribute('label', label);
-			if (DEBUG)
+			if (self.debug)
 				aTab.setAttribute('tooltiptext', label +' (suspended)');
 			timer.setTimeout(function() {
 				aTab.setAttribute('image', state.attributes.image);
@@ -358,13 +383,19 @@ SuspendTabController.prototype = {
 			}
 		}
 
-		if (DEBUG)
+		if (this.debug)
 			aTab.setAttribute('tooltiptext', aTab.label);
 	}
 };
 
+SuspendTabController.instances = [];
+
 function shutdown()
 {
+	SuspendTabController.instances.forEach(function(aInstance) {
+		aInstance.destroy();
+	});
+
 	WindowManager = undefined;
 	ToolbarItem = undefined;
 	timer = undefined;

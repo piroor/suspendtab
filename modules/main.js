@@ -57,9 +57,14 @@ WindowManager.addHandler(handleWindow);
 function shutdown()
 {
 	WindowManager.getWindows(TYPE_BROWSER).forEach(function(aWindow) {
-		aWindow.SuspendTab.destroy();
-		delete aWindow.SuspendTab;
+		if (aWindow.SuspendTab) {
+			aWindow.SuspendTab.destroy();
+			delete aWindow.SuspendTab;
+		}
 	});
+
 	WindowManager = undefined;
 	SuspendTabController = undefined;
+
+	shutdown = undefined;
 }
