@@ -34,6 +34,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 var EXPORTED_SYMBOLS = ['SuspendTabController'];
+var DEBUG = true;
 
 load('lib/WindowManager');
 load('lib/ToolbarItem');
@@ -139,8 +140,11 @@ SuspendTabController.prototype = {
 
 	onTabSelect : function(aEvent)
 	{
-		this.cancelTimer(aEvent.originalTarget);
-		this.resume(aEvent.originalTarget);
+		var tab = aEvent.originalTarget;
+		if (DEBUG)
+			dump('tab '+tab._tPos+' is selected.\n');
+		this.cancelTimer(tab);
+		this.resume(tab);
 		this.setTimers();
 	},
 
@@ -153,10 +157,10 @@ SuspendTabController.prototype = {
 			if (aTab.__suspendtab__timer && !aReset)
 				return;
 
-			if (aReset)
-				this.cancelTimer(aTab);
 			if (this.autoSuspend)
 				this.reserveSuspend(aTab);
+			else if (aReset)
+				this.cancelTimer(aTab);
 		}, this);
 	},
 
@@ -170,21 +174,46 @@ SuspendTabController.prototype = {
 	cancelTimer : function(aTab)
 	{
 		if (aTab.__suspendtab__timer) {
+			if (DEBUG)
+				dump(' cancel timer for '+aTab._tPos+'\n');
 			timer.clearTimeout(aTab.__suspendtab__timer);
+			aTab.__suspendtab__timestamp = 0;
 			aTab.__suspendtab__timer = null;
+
+			if (DEBUG && !this.isSuspended(aTab))
+				aTab.setAttribute('tooltiptext', aTab.label);
 		}
 	},
 
 	reserveSuspend : function(aTab)
 	{
+		var timestamp = aTab.__suspendtab__timestamp;
 		this.cancelTimer(aTab);
 
 		if (this.isSuspended(aTab))
 			return;
 
+		if (DEBUG)
+			aTab.setAttribute('tooltiptext', aTab.label +' (to be suspended)');
+
+		if (DEBUG)
+			dump(' reserve suspend '+aTab._tPos+'\n');
+
+		var now = Date.now();
+		if (DEBUG) {
+			dump('  timestamp = '+timestamp+'\n');
+			dump('  now       = '+now+'\n');
+		}
+		if (timestamp && now - timestamp >= this.autoSuspendTimeout) {
+			dump('  => suspend now!\n');
+			return this.suspend(aTab);
+		}
+
+		aTab.__suspendtab__timestamp = timestamp || now;
 		aTab.__suspendtab__timer = timer.setTimeout(function(aSelf) {
 			if (aSelf.autoSuspend)
 				aSelf.suspend(aTab);
+			aTab.__suspendtab__timestamp = 0;
 			aTab.__suspendtab__timer = null;
 		}, this.autoSuspendTimeout, this)
 	},
@@ -198,6 +227,8 @@ SuspendTabController.prototype = {
 		this.window.gBrowser.addTabsProgressListener(this);
 
 		this.setTimers();
+
+		prefs.addPrefListener(this);
 
 		var toolbar = this.window.document.getElementById('nav-bar');
 		this.toolbarButton = ToolbarItem.create(
@@ -222,6 +253,8 @@ SuspendTabController.prototype = {
 	{
 		this.cancelTimers();
 
+		prefs.removePrefListener(this);
+
 		this.window.removeEventListener('unload', this, false);
 		this.window.removeEventListener('TabSelect', this, true);
 		this.window.removeEventListener('SSTabRestored', this, true);
@@ -245,6 +278,9 @@ SuspendTabController.prototype = {
 		if (this.isSuspended(aTab))
 			return;
 
+		if (DEBUG)
+			dump(' suspend '+aTab._tPos+'\n');
+
 		var label = aTab.label;
 		var state = SS.getTabState(aTab);
 		state = JSON.parse(state);
@@ -259,6 +295,8 @@ SuspendTabController.prototype = {
 		browser.addEventListener('load', function() {
 			browser.removeEventListener('load', arguments.callee, true);
 			aTab.setAttribute('label', label);
+			if (DEBUG)
+				aTab.setAttribute('tooltiptext', label +' (suspended)');
 			timer.setTimeout(function() {
 				aTab.setAttribute('image', state.attributes.image);
 			}, 0);
@@ -319,6 +357,9 @@ SuspendTabController.prototype = {
 				dump(e+'\n');
 			}
 		}
+
+		if (DEBUG)
+			aTab.setAttribute('tooltiptext', aTab.label);
 	}
 };
 
