@@ -105,7 +105,8 @@ SuspendTabController.prototype = {
 				return this.resume(aEvent.originalTarget);
 
 			case 'DOMTitleChanged':
-				return this.onDOMTitleChanged(aEvent);
+			case 'load':
+				return this.onReloaded(aEvent);
 
 			case 'unload':
 				return this.destroy();
@@ -145,7 +146,7 @@ SuspendTabController.prototype = {
 		this.setTimers();
 	},
 
-	onDOMTitleChanged : function(aEvent)
+	onReloaded : function(aEvent)
 	{
 		if (!this.autoSuspendResetOnReload)
 			return;
@@ -241,6 +242,7 @@ SuspendTabController.prototype = {
 		this.window.addEventListener('TabSelect', this, true);
 		this.window.addEventListener('SSTabRestoring', this, true);
 		this.window.addEventListener('SSTabRestored', this, true);
+		this.window.gBrowser.addEventListener('load', this, true);
 		this.window.gBrowser.addEventListener('DOMTitleChanged', this, true);
 
 		this.setTimers();
@@ -280,6 +282,7 @@ SuspendTabController.prototype = {
 		this.window.removeEventListener('TabSelect', this, true);
 		this.window.removeEventListener('SSTabRestoring', this, true);
 		this.window.removeEventListener('SSTabRestored', this, true);
+		this.window.gBrowser.removeEventListener('load', this, true);
 		this.window.gBrowser.removeEventListener('DOMTitleChanged', this, true);
 
 		if (this.toolbarButton.node)
