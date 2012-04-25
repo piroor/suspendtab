@@ -34,14 +34,16 @@
  * ***** END LICENSE BLOCK ***** */
 
 load('lib/WindowManager');
+
+load('defaults');
 load('controller');
 
 const TYPE_BROWSER = 'navigator:browser';
 
 function handleWindow(aWindow)
 {
-	aWindow.addEventListener('load', function() {
-		aWindow.removeEventListener('load', arguments.callee, false);
+	aWindow.addEventListener('DOMContentLoaded', function() {
+		aWindow.removeEventListener('DOMContentLoaded', arguments.callee, false);
 		if (aWindow.document.documentElement.getAttribute('windowtype') == TYPE_BROWSER)
 			aWindow.SuspendTab = new SuspendTabController(aWindow);
 	}, false);

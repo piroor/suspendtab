@@ -37,6 +37,7 @@ var EXPORTED_SYMBOLS = ['SuspendTabController'];
 
 load('lib/WindowManager');
 load('lib/ToolbarItem');
+load('lib/prefs');
 var timer = require('lib/jstimer');
 
 var bundle = require('lib/locale')
@@ -64,13 +65,67 @@ function SuspendTabController(aWindow)
 SuspendTabController.prototype = {
 	__proto__ : require('const'),
 
+	get autoSuspend()
+	{
+		return prefs.getPref(this.domain + 'autoSuspend.enabled');
+	},
+	get autoSuspendTimeout()
+	{
+		return prefs.getPref(this.domain + 'autoSuspend.timeout');
+	},
+	get resetTimersOnReload()
+	{
+		return prefs.getPref(this.domain + 'autoSuspend.resetTimersOnReload');
+	},
+
+	get tabs()
+	{
+		return this.window.gBrowser.mTabContainer.childNodes;
+	},
+
 	handleEvent : function(aEvent)
 	{
 		switch (aEvent.type)
 		{
-			case 'command': return this.onCommand(aEvent);
-			case 'unload': return this.uninit(aEvent.relatedTarget);
+			case 'command':
+				return this.onCommand(aEvent);
+
+			case 'TabSelect':
+				return this.onTabSelect(aEvent);
+
+			case 'SSTabRestored':
+				return this.resume(aEvent.originalTarget);
+
+			case 'unload':
+				return this.uninit(aEvent.relatedTarget);
 		}
+	},
+
+	observe : function(aSubject, aTopic, aData)
+	{
+		if (aTopic != 'nsPref:changed')
+			return;
+
+		switch (aData)
+		{
+			case this.domain + 'autoSuspend.enabled':
+			case this.domain + 'autoSuspend.timeout':
+				return this.setTimers(true);
+		}
+	},
+
+	onStateChange : function(aBrowser, aWebProgress, aRequest, aStateFlags, aStatus)
+	{
+		if (!this.resetTimersOnReload)
+			return;
+
+		Array.some(this.tabs, function(aTab) {
+			if (aTab.linkedBrowser != aBrowser)
+				return false;
+
+			this.reserveSuspend(aTab);
+			return true;
+		}, this);
 	},
 
 	onCommand : function(aEvent)
@@ -82,10 +137,67 @@ SuspendTabController.prototype = {
 			this.suspend(tab);
 	},
 
+	onTabSelect : function(aEvent)
+	{
+		this.cancelTimer(aEvent.originalTarget);
+		this.resume(aEvent.originalTarget);
+		this.setTimers();
+	},
+
+	setTimers : function(aReset)
+	{
+		Array.forEach(this.tabs, function(aTab) {
+			if (aTab.selected)
+				return;
+
+			if (aTab.__suspendtab__timer && !aReset)
+				return;
+
+			if (aReset)
+				this.cancelTimer(aTab);
+			if (this.autoSuspend)
+				this.reserveSuspend(aTab);
+		}, this);
+	},
+
+	cancelTimers : function()
+	{
+		Array.forEach(this.tabs, function(aTab) {
+			this.cancelTimer(aTab);
+		}, this);
+	},
+
+	cancelTimer : function(aTab)
+	{
+		if (aTab.__suspendtab__timer) {
+			timer.clearTimeout(aTab.__suspendtab__timer);
+			aTab.__suspendtab__timer = null;
+		}
+	},
+
+	reserveSuspend : function(aTab)
+	{
+		this.cancelTimer(aTab);
+
+		if (this.isSuspended(aTab))
+			return;
+
+		aTab.__suspendtab__timer = timer.setTimeout(function(aSelf) {
+			if (aSelf.autoSuspend)
+				aSelf.suspend(aTab);
+			aTab.__suspendtab__timer = null;
+		}, this.autoSuspendTimeout, this)
+	},
+
 	init : function(aWindow)
 	{
 		this.window = aWindow;
 		this.window.addEventListener('unload', this, false);
+		this.window.addEventListener('TabSelect', this, true);
+		this.window.addEventListener('SSTabRestored', this, true);
+		this.window.gBrowser.addTabsProgressListener(this);
+
+		this.setTimers();
 
 		var toolbar = this.window.document.getElementById('nav-bar');
 		this.toolbarButton = ToolbarItem.create(
@@ -108,10 +220,17 @@ SuspendTabController.prototype = {
 
 	destroy : function()
 	{
+		this.cancelTimers();
+
 		this.window.removeEventListener('unload', this, false);
+		this.window.removeEventListener('TabSelect', this, true);
+		this.window.removeEventListener('SSTabRestored', this, true);
+		this.window.gBrowser.removeTabsProgressListener(this);
+
 		this.toolbarButton.removeEventListener('command', this, false);
 		this.toolbarButton.destroy();
 		delete this.toolbarButton;
+
 		delete this.window;
 	},
 
