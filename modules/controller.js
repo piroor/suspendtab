@@ -33,31 +33,74 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-load('lib/WindowManager');
-load('controller');
+load('lib/ToolbarItem');
 
-const TYPE_BROWSER = 'navigator:browser';
+var bundle = require('lib/locale')
+				.get(resolve('locale/label.properties'));
 
-function handleWindow(aWindow)
+var suspend = require('suspend');
+
+function SuspendTabController(aWindow)
 {
-	aWindow.addEventListener('load', function() {
-		aWindow.removeEventListener('load', arguments.callee, false);
-		if (aWindow.document.documentElement.getAttribute('windowtype') == TYPE_BROWSER)
-			aWindow.SuspendTab = new SuspendTabController(aWindow);
-	}, false);
+	this.init(aWindow);
 }
+SuspendTabController.prototype = {
+	handleEvent : function(aEvent)
+	{
+		switch (aEvent.type)
+		{
+			case 'command': return this.onCommand(aEvent);
+			case 'unload': return this.uninit(aEvent.relatedTarget);
+		}
+	},
 
-WindowManager.getWindows(TYPE_BROWSER).forEach(function(aWindow) {
-	aWindow.SuspendTab = new SuspendTabController(aWindow);
-});
-WindowManager.addHandler(handleWindow);
+	onCommand : function(aEvent)
+	{
+		var tab = aEvent.target.ownerDocument.defaultView.gBrowser.selectedTab;
+		if (suspend.isSuspended(tab))
+			suspend.resume(tab);
+		else
+			suspend.suspend(tab);
+	},
+
+	init : function(aWindow)
+	{
+		this.window = aWindow;
+		this.window.addEventListener('unload', this, false);
+
+		var toolbar = this.window.document.getElementById('nav-bar');
+		this.toolbarButton = ToolbarItem.create(
+			<>
+				<toolbarbutton id="suspend-resume-button"
+					tooltiptext={bundle.getString('button.label')}>
+					<label value={bundle.getString('button.label')}/>
+				</toolbarbutton>
+			</>,
+			toolbar,
+			{
+				onInit : function() {
+				},
+				onDestroy : function() {
+				}
+			}
+		);
+		this.toolbarButton.addEventListener('command', this, false);
+	},
+
+	destroy : function()
+	{
+		this.window.removeEventListener('unload', this, false);
+		this.toolbarButton.removeEventListener('command', this, false);
+		this.toolbarButton.destroy();
+		delete this.toolbarButton;
+		delete this.window;
+	}
+};
 
 function shutdown()
 {
-	WindowManager.getWindows(TYPE_BROWSER).forEach(function(aWindow) {
-		aWindow.SuspendTab.destroy();
-		delete aWindow.SuspendTab;
-	});
-	WindowManager = undefined;
+	ToolbarItem = undefined;
 	SuspendTabController = undefined;
+	bundle = undefined;
+	suspend = undefined;
 }
