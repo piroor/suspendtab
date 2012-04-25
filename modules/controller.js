@@ -76,7 +76,7 @@ SuspendTabController.prototype = {
 	},
 	get autoSuspendTimeout()
 	{
-		return prefs.getPref(this.domain + 'autoSuspend.timeout');
+		return prefs.getPref(this.domain + 'autoSuspend.timeout') * prefs.getPref(this.domain + 'autoSuspend.timeout.factor');
 	},
 	get autoSuspendResetOnReload()
 	{
@@ -121,6 +121,7 @@ SuspendTabController.prototype = {
 		{
 			case this.domain + 'autoSuspend.enabled':
 			case this.domain + 'autoSuspend.timeout':
+			case this.domain + 'autoSuspend.timeout.factor':
 				return this.setTimers(true);
 		}
 	},

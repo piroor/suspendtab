@@ -36,3 +36,16 @@
 
 button.label=Suspend/Resume
 
+
+title=Suspend Tab Configuration
+
+tab.general=General
+autoSuspend.enabled=Suspend background tabs automatically
+autoSuspend.timeout.before=Suspend tabs after
+autoSuspend.timeout.middle=
+autoSuspend.timeout.factor.hours=hours
+autoSuspend.timeout.factor.minutes=minutes
+autoSuspend.timeout.factor.seconds=seconds
+autoSuspend.timeout.factor.milliseconds=milli seconds
+autoSuspend.timeout.after=past
+autoSuspend.resetOnReload=Don't suspend if the tab is reloaded

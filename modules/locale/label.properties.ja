@@ -36,3 +36,16 @@
 
 button.label=サスペンド/復帰
 
+
+title=Suspend Tabの設定
+
+tab.general=全般
+autoSuspend.enabled=一定時間以上見ていないタブを自動的にサスペンドする
+autoSuspend.timeout.before=フォーカスが外れてから
+autoSuspend.timeout.middle=
+autoSuspend.timeout.factor.hours=時間
+autoSuspend.timeout.factor.minutes=分
+autoSuspend.timeout.factor.seconds=秒
+autoSuspend.timeout.factor.milliseconds=ミリ秒
+autoSuspend.timeout.after=以上経過したらタブをサスペンドする
+autoSuspend.resetOnReload=一定時間以上見ていないタブでも、再読み込みされた場合はサスペンドしない

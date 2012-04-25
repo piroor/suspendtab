@@ -36,6 +36,7 @@
 load('lib/WindowManager');
 
 load('defaults');
+load('config');
 load('controller');
 
 const TYPE_BROWSER = 'navigator:browser';

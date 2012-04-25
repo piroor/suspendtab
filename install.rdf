@@ -8,6 +8,7 @@
                    em:version="0.1"
                    em:creator="SHIMODA Hiroshi"
                    em:description="Suspends background old tabs automatically to save memory usage."
+                   em:optionsURL="about:blank?suspendtab-config"
                    em:bootstrap="true">
 
 
