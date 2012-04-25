@@ -33,6 +33,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var EXPORTED_SYMBOLS = ['SuspendTabController'];
+
 load('lib/ToolbarItem');
 
 var bundle = require('lib/locale')
