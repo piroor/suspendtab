@@ -33,8 +33,10 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-
-button.label=Suspend/Resume
+tab.suspend.label=Suspend Tab
+tab.suspend.accesskey=s
+tab.resume.label=Resume Tab
+tab.resume.accesskey=r
 
 
 title=Suspend Tab Configuration
@@ -49,3 +51,6 @@ autoSuspend.timeout.factor.seconds=seconds
 autoSuspend.timeout.factor.milliseconds=milli seconds
 autoSuspend.timeout.after=past
 autoSuspend.resetOnReload=Don't suspend if the tab is reloaded
+
+tab.menu=Menu
+tabContextMenu.items.caption=Extra items for the context menu on tabs

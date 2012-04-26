@@ -33,8 +33,10 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-
-button.label=サスペンド/復帰
+tab.suspend.label=このタブをサスペンドする
+tab.suspend.accesskey=s
+tab.resume.label=このタブを復帰させる
+tab.resume.accesskey=r
 
 
 title=Suspend Tabの設定
@@ -49,3 +51,6 @@ autoSuspend.timeout.factor.seconds=秒
 autoSuspend.timeout.factor.milliseconds=ミリ秒
 autoSuspend.timeout.after=以上経過したらタブをサスペンドする
 autoSuspend.resetOnReload=一定時間以上見ていないタブでも、再読み込みされた場合はサスペンドしない
+
+tab.menu=メニュー
+tabContextMenu.items.caption=タブのコンテキストメニューに以下の項目を追加する

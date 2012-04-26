@@ -36,7 +36,6 @@
 var EXPORTED_SYMBOLS = ['SuspendTabController'];
 
 load('lib/WindowManager');
-load('lib/ToolbarItem');
 load('lib/prefs');
 var timer = require('lib/jstimer');
 
@@ -87,11 +86,18 @@ SuspendTabController.prototype = {
 	{
 		return this.window.gBrowser.mTabContainer.childNodes;
 	},
+	get tabContextPopup()
+	{
+		return this.window.document.getElementById('tabContextMenu');
+	},
 
 	handleEvent : function(aEvent)
 	{
 		switch (aEvent.type)
 		{
+			case 'popupshowing':
+				return this.onPopupShowing(aEvent);
+
 			case 'command':
 				return this.onCommand(aEvent);
 
@@ -127,13 +133,39 @@ SuspendTabController.prototype = {
 		}
 	},
 
+	onPopupShowing : function(aEvent)
+	{
+		if (!this.tabContextItem || aEvent.target != this.tabContextPopup)
+			return;
+
+		var tab = this.window.gBrowser.mContextTab;
+		if (this.isSuspended(tab)) {
+			this.tabContextItem.setAttribute('label', bundle.getString('tab.resume.label'));
+			this.tabContextItem.setAttribute('accesskey',  bundle.getString('tab.resume.accesskey'));
+		}
+		else {
+			this.tabContextItem.setAttribute('label', bundle.getString('tab.suspend.label'));
+			this.tabContextItem.setAttribute('accesskey',  bundle.getString('tab.suspend.accesskey'));
+		}
+	},
+
 	onCommand : function(aEvent)
 	{
-		var tab = aEvent.target.ownerDocument.defaultView.gBrowser.selectedTab;
-		if (this.isSuspended(tab))
+		var tab = this.window.gBrowser.mContextTab;
+		if (this.isSuspended(tab)) {
 			this.resume(tab);
-		else
+		}
+		else {
 			this.suspend(tab);
+			if (tab.selected) {
+				let visibleTabs = this.window.gBrowser.visibleTabs;
+				let index = visibleTabs.indexOf(tab);
+				index = index > -1 && index + 1 <= visibleTabs.length - 1 ?
+						index + 1 :
+						0 ;
+				this.window.gBrowser.selectedTab = visibleTabs[index];;
+			}
+		}
 	},
 
 	onTabSelect : function(aEvent)
@@ -249,24 +281,17 @@ SuspendTabController.prototype = {
 
 		prefs.addPrefListener(this);
 
-		var toolbar = this.window.document.getElementById('nav-bar');
-		this.toolbarButton = ToolbarItem.create(
-			<>
-				<toolbarbutton id="suspend-resume-button"
-					tooltiptext={bundle.getString('button.label')}>
-					<label value={bundle.getString('button.label')}/>
-				</toolbarbutton>
-			</>,
-			toolbar,
-			{
-				onInit : function() {
-				},
-				onDestroy : function() {
-				}
-			}
-		);
-		if (this.toolbarButton.node)
-			this.toolbarButton.addEventListener('command', this, false);
+		this.initMenuItems();
+	},
+
+	initMenuItems : function()
+	{
+		this.tabContextItem = this.window.document.createElement('menuitem');
+		this.tabContextItem.setAttribute('id', 'context_toggleTabSuspended');
+		this.tabContextItem.addEventListener('command', this, false);
+
+		this.tabContextPopup.insertBefore(this.tabContextItem, this.window.document.getElementById('context_undoCloseTab'));
+		this.tabContextPopup.addEventListener('popupshowing', this, false);
 	},
 
 	destroy : function()
@@ -275,6 +300,8 @@ SuspendTabController.prototype = {
 			return;
 
 		this.cancelTimers();
+
+		this.destroyMenuItems();
 
 		prefs.removePrefListener(this);
 
@@ -285,14 +312,17 @@ SuspendTabController.prototype = {
 		this.window.gBrowser.removeEventListener('load', this, true);
 		this.window.gBrowser.removeEventListener('DOMTitleChanged', this, true);
 
-		if (this.toolbarButton.node)
-			this.toolbarButton.removeEventListener('command', this, false);
-		this.toolbarButton.destroy();
-		delete this.toolbarButton;
-
 		delete this.window;
 
 		SuspendTabController.instances.splice(SuspendTabController.instances.indexOf(this), 1);
+	},
+
+	destroyMenuItems : function()
+	{
+		this.tabContextPopup.removeEventListener('popupshowing', this, false);
+		this.tabContextItem.removeEventListener('command', this, false);
+		this.tabContextItem.parentNode.removeChild(this.tabContextItem);
+		delete this.tabContextItem;
 	},
 
 
@@ -404,7 +434,6 @@ function shutdown()
 	});
 
 	WindowManager = undefined;
-	ToolbarItem = undefined;
 	timer = undefined;
 	bundle = undefined;
 
