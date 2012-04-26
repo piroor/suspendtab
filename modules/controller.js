@@ -415,7 +415,8 @@ SuspendTabController.prototype = {
 
 		delete this.window;
 
-		SuspendTabController.instances.splice(SuspendTabController.instances.indexOf(this), 1);
+		if (SuspendTabController)
+			SuspendTabController.instances.splice(SuspendTabController.instances.indexOf(this), 1);
 	},
 
 	destroyMenuItems : function()
@@ -672,6 +673,7 @@ function shutdown()
 	internalSS = undefined;
 	fullStates = undefined;
 
+	SuspendTabController.instances = undefined;
 	SuspendTabController = undefined;
 
 	shutdown = undefined;
