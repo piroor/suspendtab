@@ -440,8 +440,13 @@ SuspendTabController.prototype = {
 			dump(' suspend '+aTab._tPos+'\n');
 
 		var label = aTab.label;
+
+		// First, get the current tab state via the genuine step.
+		// We store it to the session data permanently.
 		var state = SS.getTabState(aTab);
 		state = JSON.parse(state);
+		// We only need minimum data required to restore the session history,
+		// so drop needless information.
 		var partialState = {
 			entries   : state.entries,
 			storage   : state.storage || null,
@@ -450,7 +455,7 @@ SuspendTabController.prototype = {
 		};
 		SS.setTabValue(aTab, this.STATE, JSON.stringify(partialState));
 
-		// If possible, we should use full state including sensitive data.
+		// If possible, we should use full tab state including sensitive data.
 		// Store it to the volatile storage instaed of the session data, for privacy.
 		if (internalSS._collectTabData) {
 			let state = internalSS._collectTabData(aTab, true);
@@ -464,23 +469,36 @@ SuspendTabController.prototype = {
 			});
 		}
 
+		// OK, let's destroy the current session history!
 		var browser = aTab.linkedBrowser;
+		var SHistory = browser.sessionHistory;
 		var uri = browser.currentURI.clone();
 		var self = this;
 		browser.addEventListener('load', function() {
 			browser.removeEventListener('load', arguments.callee, true);
+
 			aTab.setAttribute('label', label);
 			if (self.debug)
 				aTab.setAttribute('tooltiptext', label +' (suspended)');
+
+			// Because Firefox sets the default favicon on this event loop,
+			// we have to reset the favicon in the next loop.
 			timer.setTimeout(function() {
 				aTab.setAttribute('image', state.attributes.image);
 			}, 0);
-			if (SHistory.count > 0) SHistory.PurgeHistory(SHistory.count);
+
 			browser.docShell.setCurrentURI(uri);
 			browser.contentDocument.title = label;
+
+			// Don't purge all histories - leave the last one!
+			// The SS module stores the title of the history entry
+			// as the title of the restored tab.
+			// If there is no history entry, Firefox will restore
+			// the tab with the default title (the URI of the page).
+			if (SHistory.count > 1) SHistory.PurgeHistory(SHistory.count - 1);
 		}, true);
+		// Load a blank page to clear out the current history entries.
 		browser.loadURI('about:blank');
-		var SHistory = browser.sessionHistory;
 
 		this.reserveGC();
 	},
@@ -500,6 +518,9 @@ SuspendTabController.prototype = {
 		if (!this.isSuspended(aTab)) return;
 
 		if (this.isSuspendedBySS(aTab)) {
+			// Reloading action resumes the pending restoration.
+			// This will fire "SSTabRestored" event, then this method
+			// will be called again to restore actual history entries.
 			aTab.linkedBrowser.reload();
 			return;
 		}
@@ -509,35 +530,48 @@ SuspendTabController.prototype = {
 		state = JSON.parse(state);
 		SS.setTabValue(aTab, this.STATE, '');
 
-		// If there is a full state in the volatile storage , use it.
+		// If there is a full tab state in the volatile storage, use it.
 		var id = aTab.getAttribute('linkedpanel');
 		if (id in fullStates) {
 			state = JSON.parse(fullStates[id]);
 			delete fullStates[id];
 		}
 
+		// First, clear all existing information.
+		// We recycle this tab to load session information.
 		var browser = aTab.linkedBrowser;
 		var SHistory = browser.sessionHistory
-							.QueryInterface(Ci.nsISHistory)
-							.QueryInterface(Ci.nsISHistoryInternal);
+						.QueryInterface(Ci.nsISHistory)
+						.QueryInterface(Ci.nsISHistoryInternal);
 		if (SHistory.count > 0)
 			SHistory.PurgeHistory(SHistory.count);
 
-		aIdMap = aIdMap || { used : {} };
-		aDocIdentMap = aDocIdentMap || {};
-
-		state.entries.forEach(function(aEntry) {
-			SHistory.addEntry(internalSS._deserializeHistoryEntry(aEntry, aIdMap, aDocIdentMap), true);
-		});
-
-		if (internalSS._deserializeSessionStorage &&
-			state.storage &&
-			browser.docShell instanceof Ci.nsIDocShell)
-			internalSS._deserializeSessionStorage(state.storage, browser.docShell);
+		// OK, let's restore the tab!
+		browser.stop();
 
 		var index = (state.index || state.entries.length) - 1;
 		if (index >= state.entries.length)
 			index = state.entries.length - 1;
+
+		let current = state.entries[index] || null;
+		let uri = current && current.url || null;
+		browser.userTypedValue = uri;
+
+
+		aIdMap = aIdMap || { used : {} };
+		aDocIdentMap = aDocIdentMap || {};
+		state.entries.forEach(function(aEntry) {
+			SHistory.addEntry(internalSS._deserializeHistoryEntry(aEntry, aIdMap, aDocIdentMap), true);
+		});
+
+		/*
+		// We don't have to restore session storage because we didn't clear it
+		// and it is restoed on the startup, by Firefox itself.
+		if (internalSS._deserializeSessionStorage &&
+			state.storage &&
+			browser.docShell instanceof Ci.nsIDocShell)
+			internalSS._deserializeSessionStorage(state.storage, browser.docShell);
+		*/
 
 		if (index > -1) {
 			browser.addEventListener('load', function(aEvent) {
@@ -551,11 +585,18 @@ SuspendTabController.prototype = {
 
 				browser.removeEventListener('load', arguments.callee, true);
 
-				browser.__SS_restore_tab = aTab;
+				// Set dummy "tab" because restoreDocument() fires
+				// the SSTabRestored event. We don't need it.
+				browser.__SS_restore_tab = {
+					ownerDocument : aTab.ownerDocument,
+					dispatchEvent : function() {}
+				};
+				// This is required to restore form data.
 				browser.__SS_restore_data = state.entries[index];
 				if (state.pageStyle)
 					browser.__SS_restore_pageStyle = state.pageStyle;
 
+				// Restore form data and scrolled positions.
 				internalSS.restoreDocument(browser.ownerDocument.defaultView, browser, aEvent);
 			}, true);
 
