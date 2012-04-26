@@ -147,13 +147,21 @@ SuspendTabController.prototype = {
 			return;
 
 		var tab = this.browser.mContextTab;
+		var item = this.tabContextItem;
 		if (this.isSuspended(tab)) {
-			this.tabContextItem.setAttribute('label', bundle.getString('tab.resume.label'));
-			this.tabContextItem.setAttribute('accesskey',  bundle.getString('tab.resume.accesskey'));
+			item.setAttribute('label', bundle.getString('tab.resume.label'));
+			item.setAttribute('accesskey',  bundle.getString('tab.resume.accesskey'));
 		}
 		else {
-			this.tabContextItem.setAttribute('label', bundle.getString('tab.suspend.label'));
-			this.tabContextItem.setAttribute('accesskey',  bundle.getString('tab.suspend.accesskey'));
+			item.setAttribute('label', bundle.getString('tab.suspend.label'));
+			item.setAttribute('accesskey',  bundle.getString('tab.suspend.accesskey'));
+		}
+
+		if (this.tabs.length == 1) {
+			item.setAttribute('disabled', true);
+		}
+		else {
+			item.removeAttribute('disabled');
 		}
 	},
 
@@ -180,24 +188,39 @@ SuspendTabController.prototype = {
 			}
 
 			if (tab.selected) {
-				let nextFocused;
-				if (TST) {
-					nextFocused = TST.isSubtreeCollapsed(tab) ?
-									TST.getNextSiblingTab(tab) :
-									TST.getFirstChildTab(tab) ;
-				}
-				if (!nextFocused) {
-					let visibleTabs = this.browser.visibleTabs;
-					let index = visibleTabs.indexOf(tab);
-					index = index > -1 && index + 1 <= visibleTabs.length - 1 ?
-							index + 1 :
-							0 ;
-					nextFocused = visibleTabs[index];;
-				}
+				let nextFocused = this.getNextFocusedTab(tab);
 				if (nextFocused)
 					this.browser.selectedTab = nextFocused;
 			}
 		}
+	},
+	getNextFocusedTab : function(aTab)
+	{
+		var TST = this.browser.treeStyleTab;
+		if (TST) {
+			let nextFocused = TST.isSubtreeCollapsed(tab) ?
+							TST.getNextSiblingTab(tab) || TST.getPreviousSiblingTab(tab) :
+							TST.getFirstChildTab(tab) ;
+			if (!nextFocused) {
+				let tabs = this.tabs.filter(function(aTab) {
+						return aTab.hidden;
+					});
+				if (tabs.length)
+					return tabs[0];
+			}
+			return null;
+		}
+
+		var tabs = this.browser.visibleTabs;
+		if (tabs.length == 1 && tabs[0] == aTab)
+			tabs = this.tabs;
+
+		var index = tabs.indexOf(tab);
+		index = index > -1 && index + 1 <= tabs.length - 1 ?
+				index + 1 :
+				0 ;
+
+		return tabs[index];
 	},
 
 	onTabSelect : function(aEvent)
@@ -382,10 +405,17 @@ SuspendTabController.prototype = {
 
 	isSuspended : function(aTab)
 	{
-		return (
-			SS.getTabValue(aTab, this.STATE) ||
-			aTab.linkedBrowser.__SS_restoreState == 1
-		);
+		return this.isSuspendedBySelf(aTab) || this.isSuspendedBySS(aTab);
+	},
+
+	isSuspendedBySelf : function(aTab)
+	{
+		return SS.getTabValue(aTab, this.STATE);
+	},
+
+	isSuspendedBySS : function(aTab)
+	{
+		return aTab.linkedBrowser.__SS_restoreState == 1;
 	},
 
 	suspend : function(aTab)
@@ -437,6 +467,11 @@ SuspendTabController.prototype = {
 	resumeOne : function(aTab, aIdMap, aDocIdentMap)
 	{
 		if (!this.isSuspended(aTab)) return;
+
+		if (this.isSuspendedBySS(aTab)) {
+			aTab.linkedBrowser.reload();
+			return;
+		}
 
 		var state = SS.getTabValue(aTab, this.STATE);
 		if (!state) return;
