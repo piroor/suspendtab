@@ -184,7 +184,7 @@ SuspendTabController.prototype = {
 				if (TST) {
 					nextFocused = TST.isSubtreeCollapsed(tab) ?
 									TST.getNextSiblingTab(tab) :
-									TST.getFirstChild(tab) ;
+									TST.getFirstChildTab(tab) ;
 				}
 				if (!nextFocused) {
 					let visibleTabs = this.browser.visibleTabs;
