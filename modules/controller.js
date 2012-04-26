@@ -203,17 +203,15 @@ SuspendTabController.prototype = {
 	{
 		var TST = this.browser.treeStyleTab;
 		if (TST) {
-			let nextFocused = TST.isSubtreeCollapsed(aTab) ?
-							TST.getNextSiblingTab(aTab) || TST.getPreviousSiblingTab(aTab) :
-							TST.getFirstChildTab(aTab) ;
-			if (!nextFocused) {
-				let tabs = Array.filter(this.tabs, function(aTab) {
-						return aTab.hidden;
-					});
-				if (tabs.length)
-					return tabs[0];
-			}
-			return null;
+			let nextFocused = !TST.isSubtreeCollapsed(aTab) && TST.getFirstChildTab(aTab);
+			nextFocused = nextFocused || TST.getNextSiblingTab(aTab) || TST.getPreviousSiblingTab(aTab);
+			if (nextFocused)
+				return nextFocused;
+
+			let tabs = Array.filter(this.tabs, function(aTab) {
+					return aTab.hidden;
+				});
+			return tabs.length ? tabs[0] : null ;
 		}
 
 		var tabs = this.browser.visibleTabs;
