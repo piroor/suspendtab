@@ -465,6 +465,7 @@ SuspendTabController.prototype = {
 		}
 
 		var browser = aTab.linkedBrowser;
+		var uri = browser.currentURI.clone();
 		var self = this;
 		browser.addEventListener('load', function() {
 			browser.removeEventListener('load', arguments.callee, true);
@@ -475,6 +476,8 @@ SuspendTabController.prototype = {
 				aTab.setAttribute('image', state.attributes.image);
 			}, 0);
 			if (SHistory.count > 0) SHistory.PurgeHistory(SHistory.count);
+			browser.docShell.setCurrentURI(uri);
+			browser.contentDocument.title = label;
 		}, true);
 		browser.loadURI('about:blank');
 		var SHistory = browser.sessionHistory;
