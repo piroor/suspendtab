@@ -82,13 +82,21 @@ SuspendTabController.prototype = {
 		return prefs.getPref(this.domain + 'autoSuspend.resetOnReload');
 	},
 
+	get document()
+	{
+		return this.window.document;
+	},
+	get browser()
+	{
+		return this.window.gBrowser;
+	},
 	get tabs()
 	{
-		return this.window.gBrowser.mTabContainer.childNodes;
+		return this.browser.mTabContainer.childNodes;
 	},
 	get tabContextPopup()
 	{
-		return this.window.document.getElementById('tabContextMenu');
+		return this.document.getElementById('tabContextMenu');
 	},
 
 	handleEvent : function(aEvent)
@@ -138,7 +146,7 @@ SuspendTabController.prototype = {
 		if (!this.tabContextItem || aEvent.target != this.tabContextPopup)
 			return;
 
-		var tab = this.window.gBrowser.mContextTab;
+		var tab = this.browser.mContextTab;
 		if (this.isSuspended(tab)) {
 			this.tabContextItem.setAttribute('label', bundle.getString('tab.resume.label'));
 			this.tabContextItem.setAttribute('accesskey',  bundle.getString('tab.resume.accesskey'));
@@ -151,19 +159,43 @@ SuspendTabController.prototype = {
 
 	onCommand : function(aEvent)
 	{
-		var tab = this.window.gBrowser.mContextTab;
+		var tab = this.browser.mContextTab;
+		var TST = this.browser.treeStyleTab;
 		if (this.isSuspended(tab)) {
 			this.resume(tab);
+
+			if (TST && TST.isSubtreeCollapsed(tab)) {
+				TST.getDescendantTabs(tab).forEach(function(aTab) {
+					this.resume(aTab);
+				}, this);
+			}
 		}
 		else {
 			this.suspend(tab);
+
+			if (TST && TST.isSubtreeCollapsed(tab)) {
+				TST.getDescendantTabs(tab).forEach(function(aTab) {
+					this.suspend(aTab);
+				}, this);
+			}
+
 			if (tab.selected) {
-				let visibleTabs = this.window.gBrowser.visibleTabs;
-				let index = visibleTabs.indexOf(tab);
-				index = index > -1 && index + 1 <= visibleTabs.length - 1 ?
-						index + 1 :
-						0 ;
-				this.window.gBrowser.selectedTab = visibleTabs[index];;
+				let nextFocused;
+				if (TST) {
+					nextFocused = TST.isSubtreeCollapsed(tab) ?
+									TST.getNextSiblingTab(tab) :
+									TST.getFirstChild(tab) ;
+				}
+				if (!nextFocused) {
+					let visibleTabs = this.browser.visibleTabs;
+					let index = visibleTabs.indexOf(tab);
+					index = index > -1 && index + 1 <= visibleTabs.length - 1 ?
+							index + 1 :
+							0 ;
+					nextFocused = visibleTabs[index];;
+				}
+				if (nextFocused)
+					this.browser.selectedTab = nextFocused;
 			}
 		}
 	},
@@ -296,8 +328,8 @@ SuspendTabController.prototype = {
 		this.window.addEventListener('TabSelect', this, true);
 		this.window.addEventListener('SSTabRestoring', this, true);
 		this.window.addEventListener('SSTabRestored', this, true);
-		this.window.gBrowser.addEventListener('load', this, true);
-		this.window.gBrowser.addEventListener('DOMTitleChanged', this, true);
+		this.browser.addEventListener('load', this, true);
+		this.browser.addEventListener('DOMTitleChanged', this, true);
 
 		this.setTimers();
 
@@ -308,11 +340,11 @@ SuspendTabController.prototype = {
 
 	initMenuItems : function()
 	{
-		this.tabContextItem = this.window.document.createElement('menuitem');
+		this.tabContextItem = this.document.createElement('menuitem');
 		this.tabContextItem.setAttribute('id', 'context_toggleTabSuspended');
 		this.tabContextItem.addEventListener('command', this, false);
 
-		this.tabContextPopup.insertBefore(this.tabContextItem, this.window.document.getElementById('context_undoCloseTab'));
+		this.tabContextPopup.insertBefore(this.tabContextItem, this.document.getElementById('context_undoCloseTab'));
 		this.tabContextPopup.addEventListener('popupshowing', this, false);
 	},
 
@@ -331,8 +363,8 @@ SuspendTabController.prototype = {
 		this.window.removeEventListener('TabSelect', this, true);
 		this.window.removeEventListener('SSTabRestoring', this, true);
 		this.window.removeEventListener('SSTabRestored', this, true);
-		this.window.gBrowser.removeEventListener('load', this, true);
-		this.window.gBrowser.removeEventListener('DOMTitleChanged', this, true);
+		this.browser.removeEventListener('load', this, true);
+		this.browser.removeEventListener('DOMTitleChanged', this, true);
 
 		delete this.window;
 
