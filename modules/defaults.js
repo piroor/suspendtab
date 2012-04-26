@@ -42,4 +42,5 @@ config.setDefault(domain+'autoSuspend.enabled', true);
 config.setDefault(domain+'autoSuspend.timeout', 30);
 config.setDefault(domain+'autoSuspend.timeout.factor', 1000 * 60);
 config.setDefault(domain+'autoSuspend.resetOnReload', true);
+config.setDefault(domain+'saferSuspend', true);
 config.setDefault(domain+'debug', false);

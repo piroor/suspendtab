@@ -88,6 +88,10 @@ SuspendTabController.prototype = {
 	{
 		return prefs.getPref(this.domain + 'autoSuspend.resetOnReload');
 	},
+	get saferSuspend()
+	{
+		return prefs.getPref(this.domain + 'saferSuspend');
+	},
 
 	get document()
 	{
@@ -523,6 +527,12 @@ SuspendTabController.prototype = {
 			// the tab with the default title (the URI of the page).
 			if (SHistory.count > 1) SHistory.PurgeHistory(SHistory.count - 1);
 
+			if (self.saferSuspend) {
+				if (self.debug)
+					dump(' => ready to restore '+aTab._tPos+'\n');
+				self.readyToResume(aTab);
+			}
+
 			let (event = self.document.createEvent('Events')) {
 				event.initEvent(self.EVENT_TYPE_SUSPENDED, true, false);
 				aTab.dispatchEvent(event);
@@ -548,7 +558,8 @@ SuspendTabController.prototype = {
 
 	resumeOne : function(aTab, aIdMap, aDocIdentMap)
 	{
-		if (!this.isSuspended(aTab)) return true;
+		if (!this.isSuspended(aTab))
+			return true;
 
 		if (this.isSuspendedBySS(aTab)) {
 			// Reloading action resumes the pending restoration.
@@ -564,17 +575,107 @@ SuspendTabController.prototype = {
 				return false;
 		}
 
+		this.readyToResume(aTab, aIdMap, aDocIdentMap);
+
+		var state = this.getTabState(aTab, true);
+		if (!state)
+			return true;
+
+		var index = aTab.__suspendtab__currentIndex;
+
+		delete aTab.__suspendtab__currentIndex;
+		delete aTab.__suspendtab__ready;
+
+		if (index > -1) {
+			let self = this;
+			let browser = aTab.linkedBrowser;
+			let SHistory = browser.sessionHistory
+							.QueryInterface(Ci.nsISHistory)
+							.QueryInterface(Ci.nsISHistoryInternal);
+			browser.addEventListener('load', function(aEvent) {
+				if (
+					!aEvent ||
+					!aEvent.originalTarget ||
+					!aEvent.originalTarget.defaultView ||
+					aEvent.originalTarget.defaultView != browser.contentWindow
+					)
+					return;
+
+				browser.removeEventListener('load', arguments.callee, true);
+
+				// Set dummy "tab" because restoreDocument() fires
+				// the SSTabRestored event. We don't need it.
+				browser.__SS_restore_tab = {
+					ownerDocument : aTab.ownerDocument,
+					dispatchEvent : function() {}
+				};
+				// This is required to restore form data.
+				browser.__SS_restore_data = state.entries[index];
+				if (state.pageStyle)
+					browser.__SS_restore_pageStyle = state.pageStyle;
+
+				// Restore form data and scrolled positions.
+				internalSS.restoreDocument(browser.ownerDocument.defaultView, browser, aEvent);
+
+				let event = self.document.createEvent('Events');
+				event.initEvent(self.EVENT_TYPE_RESUMED, true, false);
+				aTab.dispatchEvent(event);
+			}, true);
+
+			try {
+				// This action loads the page to the RAM, then
+				// Firefox starts to build DOM tree for the page.
+				SHistory.getEntryAtIndex(index, true);
+				SHistory.reloadCurrentEntry();
+			}
+			catch(e) {
+				dump(e+'\n');
+			}
+		}
+		else {
+			let event = self.document.createEvent('Events');
+			event.initEvent(this.EVENT_TYPE_RESUMED, true, false);
+			aTab.dispatchEvent(event);
+		}
+
+		if (this.debug)
+			aTab.setAttribute('tooltiptext', aTab.label);
+	},
+
+	getTabState : function(aTab, aClear)
+	{
 		var state = SS.getTabValue(aTab, this.STATE);
-		if (!state) return;
-		state = JSON.parse(state);
-		SS.setTabValue(aTab, this.STATE, '');
+		if (!state)
+			return null;
+
+		if (aClear)
+			SS.setTabValue(aTab, this.STATE, '');
 
 		// If there is a full tab state in the volatile storage, use it.
 		var id = aTab.getAttribute('linkedpanel');
 		if (id in fullStates) {
-			state = JSON.parse(fullStates[id]);
-			delete fullStates[id];
+			state = fullStates[id];
+			if (aClear)
+				delete fullStates[id];
 		}
+
+		return JSON.parse(state);
+	},
+
+	// This restores history entries, but they don't eat the RAM
+	// because Firefox doesn't build DOM tree until they are actually loaded.
+	readyToResume : function(aTab, aIdMap, aDocIdentMap)
+	{
+		if (!this.isSuspended(aTab) ||
+			aTab.__suspendtab__ready)
+			return true;
+
+		if (this.isSuspendedBySS(aTab))
+			return true;
+
+		var state = this.getTabState(aTab);
+		if (!state)
+			return true;
 
 		// First, clear all existing information.
 		// We recycle this tab to load session information.
@@ -612,54 +713,8 @@ SuspendTabController.prototype = {
 			internalSS._deserializeSessionStorage(state.storage, browser.docShell);
 		*/
 
-		if (index > -1) {
-			let self = this;
-			browser.addEventListener('load', function(aEvent) {
-				if (
-					!aEvent ||
-					!aEvent.originalTarget ||
-					!aEvent.originalTarget.defaultView ||
-					aEvent.originalTarget.defaultView != browser.contentWindow
-					)
-					return;
-
-				browser.removeEventListener('load', arguments.callee, true);
-
-				// Set dummy "tab" because restoreDocument() fires
-				// the SSTabRestored event. We don't need it.
-				browser.__SS_restore_tab = {
-					ownerDocument : aTab.ownerDocument,
-					dispatchEvent : function() {}
-				};
-				// This is required to restore form data.
-				browser.__SS_restore_data = state.entries[index];
-				if (state.pageStyle)
-					browser.__SS_restore_pageStyle = state.pageStyle;
-
-				// Restore form data and scrolled positions.
-				internalSS.restoreDocument(browser.ownerDocument.defaultView, browser, aEvent);
-
-				let event = self.document.createEvent('Events');
-				event.initEvent(self.EVENT_TYPE_RESUMED, true, false);
-				aTab.dispatchEvent(event);
-			}, true);
-
-			try {
-				SHistory.getEntryAtIndex(index, true);
-				SHistory.reloadCurrentEntry();
-			}
-			catch(e) {
-				dump(e+'\n');
-			}
-		}
-		else {
-			let event = self.document.createEvent('Events');
-			event.initEvent(this.EVENT_TYPE_RESUMED, true, false);
-			aTab.dispatchEvent(event);
-		}
-
-		if (this.debug)
-			aTab.setAttribute('tooltiptext', aTab.label);
+		aTab.__suspendtab__ready = true;
+		aTab.__suspendtab__currentIndex = index;
 
 		return true;
 	}
