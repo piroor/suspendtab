@@ -66,6 +66,11 @@ function SuspendTabController(aWindow)
 SuspendTabController.prototype = {
 	__proto__ : require('const'),
 
+	EVENT_TYPE_SUSPENDING : 'TabSuspending',
+	EVENT_TYPE_SUSPENDED  : 'TabSuspended',
+	EVENT_TYPE_RESUMING   : 'TabResuming',
+	EVENT_TYPE_RESUMED    : 'TabResumed',
+
 	get debug()
 	{
 		return prefs.getPref(this.domain + 'debug');
@@ -175,22 +180,28 @@ SuspendTabController.prototype = {
 		var tab = this.browser.mContextTab;
 		var TST = this.browser.treeStyleTab;
 		if (this.isSuspended(tab)) {
-			this.resume(tab);
+			let resumed = this.resume(tab);
 
 			if (TST && TST.isSubtreeCollapsed(tab)) {
 				TST.getDescendantTabs(tab).forEach(function(aTab) {
-					this.resume(aTab);
+					resumed = resumed && this.resume(aTab);
 				}, this);
 			}
+
+			if (!resumed)
+				return;
 		}
 		else {
-			this.suspend(tab);
+			let suspended = this.suspend(tab);
 
 			if (TST && TST.isSubtreeCollapsed(tab)) {
 				TST.getDescendantTabs(tab).forEach(function(aTab) {
-					this.suspend(aTab);
+					suspended = suspended && this.suspend(aTab);
 				}, this);
 			}
+
+			if (!suspended)
+				return;
 
 			if (tab.selected) {
 				let nextFocused = this.getNextFocusedTab(tab);
@@ -324,10 +335,10 @@ SuspendTabController.prototype = {
 
 		aTab.__suspendtab__timestamp = timestamp || now;
 		aTab.__suspendtab__timer = timer.setTimeout(function(aSelf) {
-			if (aSelf.autoSuspend)
-				aSelf.suspend(aTab);
 			aTab.__suspendtab__timestamp = 0;
 			aTab.__suspendtab__timer = null;
+			if (aSelf.autoSuspend)
+				aSelf.suspend(aTab);
 		}, this.autoSuspendTimeout, this)
 	},
 
@@ -434,7 +445,13 @@ SuspendTabController.prototype = {
 	suspend : function(aTab)
 	{
 		if (this.isSuspended(aTab))
-			return;
+			return true;
+
+		let (event = this.document.createElement('Events')) {
+			event.initEvent(this.EVENT_TYPE_SUSPENDING, true, true);
+			if (!aTab.dispatchEvent(event))
+				return false;
+		}
 
 		if (this.debug)
 			dump(' suspend '+aTab._tPos+'\n');
@@ -496,11 +513,18 @@ SuspendTabController.prototype = {
 			// If there is no history entry, Firefox will restore
 			// the tab with the default title (the URI of the page).
 			if (SHistory.count > 1) SHistory.PurgeHistory(SHistory.count - 1);
+
+			let (event = self.document.createElement('Events')) {
+				event.initEvent(self.EVENT_TYPE_SUSPENDED, true, false);
+				aTab.dispatchEvent(event);
+			}
 		}, true);
 		// Load a blank page to clear out the current history entries.
 		browser.loadURI('about:blank');
 
 		this.reserveGC();
+
+		return true;
 	},
 
 	resume : function(aTabs)
@@ -515,14 +539,20 @@ SuspendTabController.prototype = {
 
 	resumeOne : function(aTab, aIdMap, aDocIdentMap)
 	{
-		if (!this.isSuspended(aTab)) return;
+		if (!this.isSuspended(aTab)) return true;
 
 		if (this.isSuspendedBySS(aTab)) {
 			// Reloading action resumes the pending restoration.
 			// This will fire "SSTabRestored" event, then this method
 			// will be called again to restore actual history entries.
 			aTab.linkedBrowser.reload();
-			return;
+			return true;
+		}
+
+		let (event = this.document.createElement('Events')) {
+			event.initEvent(this.EVENT_TYPE_RESUMING, true, true);
+			if (!aTab.dispatchEvent(event))
+				return false;
 		}
 
 		var state = SS.getTabValue(aTab, this.STATE);
@@ -574,6 +604,7 @@ SuspendTabController.prototype = {
 		*/
 
 		if (index > -1) {
+			let self = this;
 			browser.addEventListener('load', function(aEvent) {
 				if (
 					!aEvent ||
@@ -598,6 +629,10 @@ SuspendTabController.prototype = {
 
 				// Restore form data and scrolled positions.
 				internalSS.restoreDocument(browser.ownerDocument.defaultView, browser, aEvent);
+
+				let event = self.document.createElement('Events');
+				event.initEvent(self.EVENT_TYPE_RESUMED, true, false);
+				aTab.dispatchEvent(event);
 			}, true);
 
 			try {
@@ -608,9 +643,16 @@ SuspendTabController.prototype = {
 				dump(e+'\n');
 			}
 		}
+		else {
+			let event = self.document.createElement('Events');
+			event.initEvent(this.EVENT_TYPE_RESUMED, true, false);
+			aTab.dispatchEvent(event);
+		}
 
 		if (this.debug)
 			aTab.setAttribute('tooltiptext', aTab.label);
+
+		return true;
 	}
 };
 
