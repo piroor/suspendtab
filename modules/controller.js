@@ -57,6 +57,8 @@ var internalSS = (function() {;
 	return new ns.SessionStoreService();
 })();
 
+var fullStates = {};
+
 function SuspendTabController(aWindow)
 {
 	this.init(aWindow);
@@ -111,6 +113,9 @@ SuspendTabController.prototype = {
 
 			case 'TabSelect':
 				return this.onTabSelect(aEvent);
+
+			case 'TabClose':
+				return this.onTabClose(aEvent);
 
 			case 'SSTabRestoring':
 				return this.cancelTimer(aEvent.originalTarget);
@@ -198,11 +203,11 @@ SuspendTabController.prototype = {
 	{
 		var TST = this.browser.treeStyleTab;
 		if (TST) {
-			let nextFocused = TST.isSubtreeCollapsed(tab) ?
-							TST.getNextSiblingTab(tab) || TST.getPreviousSiblingTab(tab) :
-							TST.getFirstChildTab(tab) ;
+			let nextFocused = TST.isSubtreeCollapsed(aTab) ?
+							TST.getNextSiblingTab(aTab) || TST.getPreviousSiblingTab(aTab) :
+							TST.getFirstChildTab(aTab) ;
 			if (!nextFocused) {
-				let tabs = this.tabs.filter(function(aTab) {
+				let tabs = Array.filter(this.tabs, function(aTab) {
 						return aTab.hidden;
 					});
 				if (tabs.length)
@@ -215,7 +220,7 @@ SuspendTabController.prototype = {
 		if (tabs.length == 1 && tabs[0] == aTab)
 			tabs = this.tabs;
 
-		var index = tabs.indexOf(tab);
+		var index = Array.slice(tabs).indexOf(aTab);
 		index = index > -1 && index + 1 <= tabs.length - 1 ?
 				index + 1 :
 				0 ;
@@ -231,6 +236,14 @@ SuspendTabController.prototype = {
 		this.cancelTimer(tab);
 		this.resume(tab);
 		this.setTimers();
+	},
+
+	onTabClose : function(aEvent)
+	{
+		var tab = aEvent.originalTarget;
+		var id = tab.getAttribute('linkedpanel');
+		if (id in fullStates)
+			delete fullStates[id];
 	},
 
 	onReloaded : function(aEvent)
@@ -349,6 +362,7 @@ SuspendTabController.prototype = {
 		this.window = aWindow;
 		this.window.addEventListener('unload', this, false);
 		this.window.addEventListener('TabSelect', this, true);
+		this.window.addEventListener('TabClose', this, true);
 		this.window.addEventListener('SSTabRestoring', this, true);
 		this.window.addEventListener('SSTabRestored', this, true);
 		this.browser.addEventListener('load', this, true);
@@ -384,6 +398,7 @@ SuspendTabController.prototype = {
 
 		this.window.removeEventListener('unload', this, false);
 		this.window.removeEventListener('TabSelect', this, true);
+		this.window.removeEventListener('TabClose', this, true);
 		this.window.removeEventListener('SSTabRestoring', this, true);
 		this.window.removeEventListener('SSTabRestored', this, true);
 		this.browser.removeEventListener('load', this, true);
@@ -430,11 +445,24 @@ SuspendTabController.prototype = {
 		var state = SS.getTabState(aTab);
 		state = JSON.parse(state);
 		var partialState = {
-			entries : state.entries,
-			storate : state.storage || null,
-			index	 : state.index
+			entries   : state.entries,
+			storage   : state.storage || null,
+			index     : state.index,
+			pageStyle : state.pageStyle || null
 		};
 		SS.setTabValue(aTab, this.STATE, JSON.stringify(partialState));
+
+		if (internalSS._collectTabData) {
+			let state = internalSS._collectTabData(aTab, true);
+			if (internalSS._updateTextAndScrollDataForTab)
+				internalSS._updateTextAndScrollDataForTab(this.window, aTab.linkedBrowser, state, true);
+			fullStates[aTab.getAttribute('linkedpanel')] = JSON.stringify({
+				entries   : state.entries,
+				storage   : state.storage || null,
+				index     : state.index,
+				pageStyle : state.pageStyle || null
+			});
+		}
 
 		var browser = aTab.linkedBrowser;
 		var self = this;
@@ -478,6 +506,12 @@ SuspendTabController.prototype = {
 		state = JSON.parse(state);
 		SS.setTabValue(aTab, this.STATE, '');
 
+		var id = aTab.getAttribute('linkedpanel');
+		if (id in fullStates) {
+			state = JSON.parse(fullStates[id]);
+			delete fullStates[id];
+		}
+
 		var browser = aTab.linkedBrowser;
 		var SHistory = browser.sessionHistory
 							.QueryInterface(Ci.nsISHistory)
@@ -502,6 +536,25 @@ SuspendTabController.prototype = {
 			index = state.entries.length - 1;
 
 		if (index > -1) {
+			browser.addEventListener('load', function(aEvent) {
+				if (
+					!aEvent ||
+					!aEvent.originalTarget ||
+					!aEvent.originalTarget.defaultView ||
+					aEvent.originalTarget.defaultView != browser.contentWindow
+					)
+					return;
+
+				browser.removeEventListener('load', arguments.callee, true);
+
+				browser.__SS_restore_tab = aTab;
+				browser.__SS_restore_data = state.entries[index];
+				if (state.pageStyle)
+					browser.__SS_restore_pageStyle = state.pageStyle;
+
+				internalSS.restoreDocument(browser.ownerDocument.defaultView, browser, aEvent);
+			}, true);
+
 			try {
 				SHistory.getEntryAtIndex(index, true);
 				SHistory.reloadCurrentEntry();
@@ -530,6 +583,7 @@ function shutdown()
 
 	SS = undefined;
 	internalSS = undefined;
+	fullStates = undefined;
 
 	SuspendTabController = undefined;
 
