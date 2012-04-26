@@ -342,6 +342,14 @@ SuspendTabController.prototype = {
 		}, this.autoSuspendTimeout, this)
 	},
 
+	resumeAll : function()
+	{
+		Array.forEach(this.tabs, function(aTab) {
+			this.cancelTimer(aTab);
+			this.resume(aTab);
+		}, this);
+	},
+
 	reserveGC : function()
 	{
 		if (this.GCTimer) return;
@@ -448,7 +456,7 @@ SuspendTabController.prototype = {
 		if (this.isSuspended(aTab))
 			return true;
 
-		let (event = this.document.createElement('Events')) {
+		let (event = this.document.createEvent('Events')) {
 			event.initEvent(this.EVENT_TYPE_SUSPENDING, true, true);
 			if (!aTab.dispatchEvent(event))
 				return false;
@@ -515,7 +523,7 @@ SuspendTabController.prototype = {
 			// the tab with the default title (the URI of the page).
 			if (SHistory.count > 1) SHistory.PurgeHistory(SHistory.count - 1);
 
-			let (event = self.document.createElement('Events')) {
+			let (event = self.document.createEvent('Events')) {
 				event.initEvent(self.EVENT_TYPE_SUSPENDED, true, false);
 				aTab.dispatchEvent(event);
 			}
@@ -550,7 +558,7 @@ SuspendTabController.prototype = {
 			return true;
 		}
 
-		let (event = this.document.createElement('Events')) {
+		let (event = this.document.createEvent('Events')) {
 			event.initEvent(this.EVENT_TYPE_RESUMING, true, true);
 			if (!aTab.dispatchEvent(event))
 				return false;
@@ -631,7 +639,7 @@ SuspendTabController.prototype = {
 				// Restore form data and scrolled positions.
 				internalSS.restoreDocument(browser.ownerDocument.defaultView, browser, aEvent);
 
-				let event = self.document.createElement('Events');
+				let event = self.document.createEvent('Events');
 				event.initEvent(self.EVENT_TYPE_RESUMED, true, false);
 				aTab.dispatchEvent(event);
 			}, true);
@@ -645,7 +653,7 @@ SuspendTabController.prototype = {
 			}
 		}
 		else {
-			let event = self.document.createElement('Events');
+			let event = self.document.createEvent('Events');
 			event.initEvent(this.EVENT_TYPE_RESUMED, true, false);
 			aTab.dispatchEvent(event);
 		}
@@ -659,8 +667,17 @@ SuspendTabController.prototype = {
 
 SuspendTabController.instances = [];
 
-function shutdown()
+SuspendTabController.resumeAll = function() {
+	this.instances.forEach(function(aInstance) {
+		aInstance.resumeAll();
+	});
+};
+
+function shutdown(aReason)
 {
+	if (aReason == 'ADDON_DISABLE')
+		SuspendTabController.resumeAll();
+
 	SuspendTabController.instances.forEach(function(aInstance) {
 		aInstance.destroy();
 	});
