@@ -450,6 +450,8 @@ SuspendTabController.prototype = {
 		};
 		SS.setTabValue(aTab, this.STATE, JSON.stringify(partialState));
 
+		// If possible, we should use full state including sensitive data.
+		// Store it to the volatile storage instaed of the session data, for privacy.
 		if (internalSS._collectTabData) {
 			let state = internalSS._collectTabData(aTab, true);
 			if (internalSS._updateTextAndScrollDataForTab)
@@ -504,6 +506,7 @@ SuspendTabController.prototype = {
 		state = JSON.parse(state);
 		SS.setTabValue(aTab, this.STATE, '');
 
+		// If there is a full state in the volatile storage , use it.
 		var id = aTab.getAttribute('linkedpanel');
 		if (id in fullStates) {
 			state = JSON.parse(fullStates[id]);
