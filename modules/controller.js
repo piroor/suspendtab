@@ -265,6 +265,28 @@ SuspendTabController.prototype = {
 		}, this.autoSuspendTimeout, this)
 	},
 
+	reserveGC : function()
+	{
+		if (this.GCTimer) return;
+		this.GCTimer = timer.setTimeout(function(aSelf) {
+			aSelf.GCTimer= null;
+
+			const ObserverService = Cc['@mozilla.org/observer-service;1']
+									.getService(Ci.nsIObserverService);
+
+			Components.utils.forceGC();
+			ObserverService.notifyObservers(null, 'child-gc-request', null);
+
+			var utils = aSelf.window
+						.QueryInterface(Ci.nsIInterfaceRequestor)
+						.getInterface(Ci.nsIDOMWindowUtils);
+			if (utils.cycleCollect) {
+				utils.cycleCollect();
+				ObserverService.notifyObservers(null, 'child-cc-request', null);
+			}
+		}, 0, this);
+	},
+
 	init : function(aWindow)
 	{
 		SuspendTabController.instances.push(this);
@@ -366,6 +388,8 @@ SuspendTabController.prototype = {
 		}, true);
 		browser.loadURI('about:blank');
 		var SHistory = browser.sessionHistory;
+
+		this.reserveGC();
 	},
 
 	resume : function(aTabs)
