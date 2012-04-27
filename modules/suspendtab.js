@@ -66,11 +66,6 @@ function SuspendTab(aWindow)
 SuspendTab.prototype = {
 	__proto__ : require('const'),
 
-	EVENT_TYPE_SUSPENDING : 'TabSuspending',
-	EVENT_TYPE_SUSPENDED  : 'TabSuspended',
-	EVENT_TYPE_RESUMING   : 'TabResuming',
-	EVENT_TYPE_RESUMED    : 'TabResumed',
-
 	get debug()
 	{
 		return prefs.getPref(this.domain + 'debug');
@@ -581,10 +576,10 @@ SuspendTab.prototype = {
 		if (!state)
 			return true;
 
-		var index = aTab.__suspendtab__currentIndex;
+		var index = aTab[this.INDEX];
 
-		delete aTab.__suspendtab__currentIndex;
-		delete aTab.__suspendtab__ready;
+		delete aTab[this.INDEX];
+		delete aTab[this.READY];
 
 		if (index > -1) {
 			let self = this;
@@ -667,7 +662,7 @@ SuspendTab.prototype = {
 	readyToResume : function(aTab, aIdMap, aDocIdentMap)
 	{
 		if (!this.isSuspended(aTab) ||
-			aTab.__suspendtab__ready)
+			aTab[this.READY])
 			return true;
 
 		if (this.isSuspendedBySS(aTab))
@@ -713,8 +708,8 @@ SuspendTab.prototype = {
 			internalSS._deserializeSessionStorage(state.storage, browser.docShell);
 		*/
 
-		aTab.__suspendtab__ready = true;
-		aTab.__suspendtab__currentIndex = index;
+		aTab[this.READY] = true;
+		aTab[this.INDEX] = index;
 
 		return true;
 	}
