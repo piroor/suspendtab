@@ -37,7 +37,7 @@ load('lib/WindowManager');
 
 load('defaults');
 load('config');
-load('controller');
+load('suspendtab');
 
 const TYPE_BROWSER = 'navigator:browser';
 
@@ -46,12 +46,12 @@ function handleWindow(aWindow)
 	aWindow.addEventListener('DOMContentLoaded', function() {
 		aWindow.removeEventListener('DOMContentLoaded', arguments.callee, false);
 		if (aWindow.document.documentElement.getAttribute('windowtype') == TYPE_BROWSER)
-			aWindow.SuspendTab = new SuspendTabController(aWindow);
+			aWindow.SuspendTab = new SuspendTab(aWindow);
 	}, false);
 }
 
 WindowManager.getWindows(TYPE_BROWSER).forEach(function(aWindow) {
-	aWindow.SuspendTab = new SuspendTabController(aWindow);
+	aWindow.SuspendTab = new SuspendTab(aWindow);
 });
 WindowManager.addHandler(handleWindow);
 
@@ -65,7 +65,7 @@ function shutdown()
 	});
 
 	WindowManager = undefined;
-	SuspendTabController = undefined;
+	SuspendTab = undefined;
 
 	shutdown = undefined;
 }

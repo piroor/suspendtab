@@ -33,7 +33,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var EXPORTED_SYMBOLS = ['SuspendTabController'];
+var EXPORTED_SYMBOLS = ['SuspendTab'];
 
 load('lib/WindowManager');
 load('lib/prefs');
@@ -59,11 +59,11 @@ var internalSS = (function() {;
 
 var fullStates = {};
 
-function SuspendTabController(aWindow)
+function SuspendTab(aWindow)
 {
 	this.init(aWindow);
 }
-SuspendTabController.prototype = {
+SuspendTab.prototype = {
 	__proto__ : require('const'),
 
 	EVENT_TYPE_SUSPENDING : 'TabSuspending',
@@ -378,7 +378,7 @@ SuspendTabController.prototype = {
 
 	init : function(aWindow)
 	{
-		SuspendTabController.instances.push(this);
+		SuspendTab.instances.push(this);
 
 		this.window = aWindow;
 		this.window.addEventListener('unload', this, false);
@@ -427,8 +427,8 @@ SuspendTabController.prototype = {
 
 		delete this.window;
 
-		if (SuspendTabController)
-			SuspendTabController.instances.splice(SuspendTabController.instances.indexOf(this), 1);
+		if (SuspendTab)
+			SuspendTab.instances.splice(SuspendTab.instances.indexOf(this), 1);
 	},
 
 	destroyMenuItems : function()
@@ -720,9 +720,9 @@ SuspendTabController.prototype = {
 	}
 };
 
-SuspendTabController.instances = [];
+SuspendTab.instances = [];
 
-SuspendTabController.resumeAll = function() {
+SuspendTab.resumeAll = function() {
 	this.instances.forEach(function(aInstance) {
 		aInstance.resumeAll();
 	});
@@ -731,9 +731,9 @@ SuspendTabController.resumeAll = function() {
 function shutdown(aReason)
 {
 	if (aReason == 'ADDON_DISABLE')
-		SuspendTabController.resumeAll();
+		SuspendTab.resumeAll();
 
-	SuspendTabController.instances.forEach(function(aInstance) {
+	SuspendTab.instances.forEach(function(aInstance) {
 		aInstance.destroy();
 	});
 
@@ -745,8 +745,8 @@ function shutdown(aReason)
 	internalSS = undefined;
 	fullStates = undefined;
 
-	SuspendTabController.instances = undefined;
-	SuspendTabController = undefined;
+	SuspendTab.instances = undefined;
+	SuspendTab = undefined;
 
 	shutdown = undefined;
 }
