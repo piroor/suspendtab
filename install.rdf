@@ -6,7 +6,7 @@
                    em:id="suspendtab@piro.sakura.ne.jp"
                    em:name="Suspend Tab"
                    em:version="0.1"
-                   em:creator="SHIMODA Hiroshi"
+                   em:creator="YUKI &quot;Piro&quot; Hiroshi"
                    em:description="Suspends background old tabs automatically to save memory usage."
                    em:optionsURL="about:blank?suspendtab-config"
                    em:bootstrap="true">
@@ -20,14 +20,14 @@
       <RDF:Description em:locale="en-US"
                        em:name="Suspend Tab"
                        em:description="Suspends background old tabs automatically to save memory usage."
-                       em:creator="SHIMODA Hiroshi">
+                       em:creator="YUKI &quot;Piro&quot; Hiroshi">
       </RDF:Description>
     </em:localized>
     <em:localized>
       <RDF:Description em:locale="ja-JP"
                        em:name="Suspend Tab"
                        em:description="バックグラウンドのタブを自動的にサスペンドして消費メモリ量を節約します。"
-                       em:creator="SHIMODA Hiroshi">
+                       em:creator="YUKI &quot;Piro&quot; Hiroshi">
       </RDF:Description>
     </em:localized>
 

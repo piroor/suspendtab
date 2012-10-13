@@ -1,10 +1,10 @@
 /**
  * @fileOverview Configuration dialog module for restartless addons
- * @author       SHIMODA "Piro" Hiroshi
+ * @author       YUKI "Piro" Hiroshi
  * @version      10
  *
  * @license
- *   The MIT License, Copyright (c) 2011-2012 SHIMODA "Piro" Hiroshi.
+ *   The MIT License, Copyright (c) 2011-2012 YUKI "Piro" Hiroshi.
  *   https://github.com/piroor/restartless/blob/master/license.txt
  * @url http://github.com/piroor/restartless
  */

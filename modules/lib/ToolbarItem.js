@@ -1,10 +1,10 @@
 /**
  * @fileOverview Toolbar item module for restartless addons
- * @author       SHIMODA "Piro" Hiroshi
+ * @author       YUKI "Piro" Hiroshi
  * @version      2
  *
  * @license
- *   The MIT License, Copyright (c) 2011 SHIMODA "Piro" Hiroshi.
+ *   The MIT License, Copyright (c) 2011 YUKI "Piro" Hiroshi.
  *   https://github.com/piroor/restartless/blob/master/license.txt
  * @url http://github.com/piroor/restartless
  */
