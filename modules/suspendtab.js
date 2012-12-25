@@ -40,7 +40,7 @@ load('lib/prefs');
 var timer = require('lib/jstimer');
 
 var bundle = require('lib/locale')
-				.get(resolve('locale/label.properties'));
+				.get('chrome://suspendtab/locale/label.properties');
 
 var SS = Cc['@mozilla.org/browser/sessionstore;1']
 			.getService(Ci.nsISessionStore);
