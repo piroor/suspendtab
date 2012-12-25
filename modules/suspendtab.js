@@ -50,11 +50,25 @@ var internalSS = (function() {;
 			atob : function(aInput) { return WindowManager.getWindow('navigator:browser').atob(aInput); },
 			btoa : function(aInput) { return WindowManager.getWindow('navigator:browser').btoa(aInput); }
 		};
-	Cc['@mozilla.org/moz/jssubscript-loader;1']
-		.getService(Ci.mozIJSSubScriptLoader)
-		.loadSubScript('resource://gre/components/nsSessionStore.js', ns);
-
-	return new ns.SessionStoreService();
+	try {
+		Cc['@mozilla.org/moz/jssubscript-loader;1']
+			.getService(Ci.mozIJSSubScriptLoader)
+			.loadSubScript('resource:///modules/sessionstore/SessionStore.jsm', ns);
+		if (ns.SessionStoreInternal._initPrefs)
+			ns.SessionStoreInternal._initPrefs();
+		return ns.SessionStoreInternal;
+	}
+	catch(e) {
+		try {
+			Cc['@mozilla.org/moz/jssubscript-loader;1']
+				.getService(Ci.mozIJSSubScriptLoader)
+				.loadSubScript('resource://gre/components/nsSessionStore.js', ns);
+			return new ns.SessionStoreService();
+		}
+		catch(e) {
+			return null;
+		}
+	}
 })();
 
 var fullStates = {};
@@ -375,7 +389,10 @@ SuspendTab.prototype = {
 	{
 		SuspendTab.instances.push(this);
 
+		if (!internalSS) return;
+
 		this.window = aWindow;
+
 		this.window.addEventListener('unload', this, false);
 		this.window.addEventListener('TabSelect', this, true);
 		this.window.addEventListener('TabClose', this, true);
