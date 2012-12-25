@@ -12,10 +12,10 @@
    namespace.clearInterval(interval);
 
  license: The MIT License, Copyright (c) 2010 YUKI "Piro" Hiroshi
-   http://github.com/piroor/fxaddonlibs/blob/master/license.txt
+   https://github.com/piroor/fxaddonlibs/blob/master/license.txt
  original:
-   http://github.com/piroor/fxaddonlibs/blob/master/jstimer.jsm
-   http://github.com/piroor/fxaddonlibs/blob/master/jstimer.test.js
+   https://github.com/piroor/fxaddonlibs/blob/master/jstimer.jsm
+   https://github.com/piroor/fxaddonlibs/blob/master/jstimer.test.js
 */
 
 var Cc = Components.classes;
@@ -80,6 +80,9 @@ function clearAllTimers()
 {
 	Timer.cancelAll();
 }
+
+/** Alias, as a handler for bootstrap.js */
+var shutdown = clearAllTimers;
 
 
 function Timer(aCallback, aTime, aType, aOwner) {

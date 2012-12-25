@@ -1,7 +1,7 @@
 /**
  * @fileOverview Window manager module for restartless addons
  * @author       YUKI "Piro" Hiroshi
- * @version      3
+ * @version      4
  *
  * @license
  *   The MIT License, Copyright (c) 2010-2011 YUKI "Piro" Hiroshi.
@@ -129,7 +129,13 @@ var WindowManager = {
 		getWindows : function(aType)
 		{
 			var array = [];
-			var windows = _WindowMediator.getEnumerator(aType || null);
+			var windows = _WindowMediator.getZOrderDOMWindowEnumerator(aType || null, true);
+
+			// By the bug 156333, we cannot find windows by their Z order on Linux.
+			// https://bugzilla.mozilla.org/show_bug.cgi?id=156333
+			if (!windows.hasMoreElements())
+				windows = _WindowMediator.getEnumerator(aType || null);
+
 			while (windows.hasMoreElements())
 			{
 				array.push(windows.getNext().QueryInterface(Ci.nsIDOMWindow));

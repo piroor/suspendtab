@@ -1,10 +1,10 @@
 /**
  * @fileOverview Locale module for restartless addons
  * @author       YUKI "Piro" Hiroshi
- * @version      4
+ * @version      5
  *
  * @license
- *   The MIT License, Copyright (c) 2010-2011 YUKI "Piro" Hiroshi.
+ *   The MIT License, Copyright (c) 2010-2012 YUKI "Piro" Hiroshi.
  *   https://github.com/piroor/restartless/blob/master/license.txt
  * @url http://github.com/piroor/restartless
  */
@@ -18,31 +18,33 @@ var get = function(aPath, aBaseURI) {
 		if (/^\w+:/.test(aPath))
 			aBaseURI = aPath;
 
-		var locale = DEFAULT_LOCALE;
-		try {
-			let prefs = Cc['@mozilla.org/preferences;1'].getService(Ci.nsIPrefBranch);
-			locale = prefs.getCharPref('general.useragent.locale');
-			if (/\w+:/.test(locale))
-				locale = prefs.getComplexValue('general.useragent.locale', Ci.nsIPrefLocalizedString).data;
-			locale = locale || DEFAULT_LOCALE;
-		}
-		catch(e) {
-		dump(e+'\n');
-		}
 		var uri = aPath;
-		[
-			aPath+'.'+locale,
-			aPath+'.'+(locale.split('-')[0]),
-			aPath+'.'+DEFAULT_LOCALE,
-			aPath+'.'+(DEFAULT_LOCALE.split('-')[0])
-		].some(function(aURI) {
-			var resolved = exists(aURI, aBaseURI);
-			if (resolved) {
-				uri = resolved;
-				return true;
+		if (!/^chrome:\/\/[^\/]+\/locale\//.test(uri)) {
+			let locale = DEFAULT_LOCALE;
+			try {
+				let prefs = Cc['@mozilla.org/preferences;1'].getService(Ci.nsIPrefBranch);
+				locale = prefs.getCharPref('general.useragent.locale');
+				if (/\w+:/.test(locale))
+					locale = prefs.getComplexValue('general.useragent.locale', Ci.nsIPrefLocalizedString).data;
+				locale = locale || DEFAULT_LOCALE;
 			}
-			return false;
-		});
+			catch(e) {
+				dump(e+'\n');
+			}
+			[
+				aPath+'.'+locale,
+				aPath+'.'+(locale.split('-')[0]),
+				aPath+'.'+DEFAULT_LOCALE,
+				aPath+'.'+(DEFAULT_LOCALE.split('-')[0])
+			].some(function(aURI) {
+				let resolved = exists(aURI, aBaseURI);
+				if (resolved) {
+					uri = resolved;
+					return true;
+				}
+				return false;
+			});
+		}
 
 		if (!(uri in gCache)) {
 			gCache[uri] = new StringBundle(uri);

@@ -36,7 +36,6 @@
 load('lib/WindowManager');
 
 load('defaults');
-load('config');
 load('suspendtab');
 
 const TYPE_BROWSER = 'navigator:browser';
