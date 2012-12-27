@@ -303,7 +303,7 @@ SuspendTab.prototype = {
 	setTimers : function(aReset)
 	{
 		Array.forEach(this.tabs, function(aTab) {
-			if (aTab.selected)
+			if (!this.isSuspendable(aTab))
 				return;
 
 			if (aTab.__suspendtab__timer && !aReset)
@@ -314,6 +314,13 @@ SuspendTab.prototype = {
 			else if (aReset)
 				this.cancelTimer(aTab);
 		}, this);
+	},
+
+	isSuspendable : function(aTab)
+	{
+		if (aTab.selected) return false;
+		if (aTab.pinned) return false;
+		return true;
 	},
 
 	cancelTimers : function()
