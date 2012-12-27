@@ -144,7 +144,9 @@ SuspendTab.prototype = {
 					var regexp = aItem.replace(/\./g, '\\.')
 									.replace(/\?/g, '.')
 									.replace(/\*/g, '.*');
-					return regexp && new RegExp('\\b' + regexp + '$', 'i');
+					regexp = aItem.indexOf('/') < 0 ?
+								'\\b' + regexp + '$' : '^' + regexp;
+					return regexp && new RegExp(regexp, 'i');
 				}
 				catch(error) {
 					Components.utils.reportError(new Error('suspendtab: invalid block rule "' + aItem + '"'));
@@ -328,9 +330,6 @@ SuspendTab.prototype = {
 	setTimers : function(aReset)
 	{
 		Array.forEach(this.tabs, function(aTab) {
-			if (!this.isSuspendable(aTab))
-				return;
-
 			if (aTab.__suspendtab__timer && !aReset)
 				return;
 
@@ -351,7 +350,9 @@ SuspendTab.prototype = {
 			let uri = aTab.linkedBrowser.currentURI;
 			let domain = this._getDomainFromURI(uri);
 			if (this.blockList.some(function(aRule) {
-					return aRule.test(aRule.source.indexOf('/') < 0 ? domain : uri.spec);
+					var target = aRule.source.indexOf('/') < 0 ? domain : uri.spec;
+					Application.console.log(aRule+' vs '+target+' => '+aRule.test(target));
+					return aRule.test(target);
 				}))
 				return false;
 		}
@@ -396,7 +397,8 @@ SuspendTab.prototype = {
 		var timestamp = aTab.__suspendtab__timestamp;
 		this.cancelTimer(aTab);
 
-		if (this.isSuspended(aTab))
+		if (this.isSuspended(aTab) ||
+			!this.isSuspendable(aTab))
 			return;
 
 		var now = Date.now();
