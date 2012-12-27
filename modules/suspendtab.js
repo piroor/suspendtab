@@ -135,6 +135,31 @@ SuspendTab.prototype = {
 		return this.document.getElementById('tabContextMenu');
 	},
 
+	get blockList()
+	{
+		if (!('_blockList' in this)) {
+			this._blockList = prefs.getPref(this.domain + 'autoSuspend.blockList');
+			this._blockList = this._blockList.split(/\s+/).map(function(aItem) {
+			}).filter(function(aItem) {
+				return !!aItem;
+			}).map(function(aItem) {
+				try {
+					var regexp = aItem.replace(/\./g, '\\.')
+									.replace(/\?/g, '.')
+									.replace(/\*/g, '.*');
+					return regexp && new RegExp('\\b' + regexp + '$');
+				}
+				catch(error) {
+					Components.utils.reportError(new Error('suspendtab: invalid block rule "' + aItem + '"'));
+					return null;
+				}
+			}).filter(function(aRule) {
+				return !!aRule;
+			});
+		}
+		return this._blockList;
+	},
+
 	handleEvent : function(aEvent)
 	{
 		switch (aEvent.type)
@@ -177,6 +202,9 @@ SuspendTab.prototype = {
 			case this.domain + 'autoSuspend.timeout':
 			case this.domain + 'autoSuspend.timeout.factor':
 				return this.setTimers(true);
+			case this.domain + 'autoSuspend.blockList':
+				delete this._blockList;
+				return;
 		}
 	},
 
@@ -319,8 +347,29 @@ SuspendTab.prototype = {
 	isSuspendable : function(aTab)
 	{
 		if (aTab.selected) return false;
+
 		if (aTab.pinned) return false;
+
+		if (this.blockList) {
+			let domain = this._getDomainFromURI(aTab.linkedBrowser.currentURI);
+			if (this.blockList.some(function(aRule) {
+					return aRule.test(domain);
+				}))
+				return false;
+		}
+
 		return true;
+	},
+	_getDomainFromURI : function (aURI) 
+	{
+		if (!aURI) return null;
+
+		var spec = aURI.spec;
+		spec = this.window.getShortcutOrURI(spec);
+		var domainMatchResult = spec.match(/^\w+:(?:\/\/)?([^:\/]+)/);
+		return domainMatchResult ?
+				domainMatchResult[1] :
+				null ;
 	},
 
 	cancelTimers : function()
