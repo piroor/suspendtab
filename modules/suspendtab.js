@@ -701,6 +701,8 @@ SuspendTab.prototype = {
 				// Restore form data and scrolled positions.
 				internalSS.restoreDocument(browser.ownerDocument.defaultView, browser, aEvent);
 
+				aTab.removeAttribute('pending');
+
 				let event = self.document.createEvent('Events');
 				event.initEvent(self.EVENT_TYPE_RESUMED, true, false);
 				aTab.dispatchEvent(event);
