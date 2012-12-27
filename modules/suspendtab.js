@@ -258,12 +258,6 @@ SuspendTab.prototype = {
 
 			if (!suspended)
 				return;
-
-			if (tab.selected) {
-				let nextFocused = this.getNextFocusedTab(tab);
-				if (nextFocused)
-					this.browser.selectedTab = nextFocused;
-			}
 		}
 	},
 	getNextFocusedTab : function(aTab)
@@ -276,7 +270,10 @@ SuspendTab.prototype = {
 				return nextFocused;
 
 			let tabs = Array.filter(this.tabs, function(aTab) {
-					return aTab.hidden;
+					return (
+						aTab.hidden &&
+						!SS.getTabValue(aOtherTab, this.STATE) // skip suspending tabs
+					);
 				});
 			return tabs.length ? tabs[0] : null ;
 		}
@@ -284,6 +281,13 @@ SuspendTab.prototype = {
 		var tabs = this.browser.visibleTabs;
 		if (tabs.length == 1 && tabs[0] == aTab)
 			tabs = this.tabs;
+
+		// skip suspending tabs
+		tabs = tabs.filter(function(aOtherTab) {
+			return !SS.getTabValue(aOtherTab, this.STATE);
+		}, this);
+		if (!tabs.length)
+			return null;
 
 		var index = Array.slice(tabs).indexOf(aTab);
 		index = index > -1 && index + 1 <= tabs.length - 1 ?
@@ -616,6 +620,12 @@ SuspendTab.prototype = {
 			}
 
 			aTab.setAttribute('pending', true);
+
+			if (aTab.selected) {
+				let nextFocused = self.getNextFocusedTab(aTab);
+				if (nextFocused)
+					self.browser.selectedTab = nextFocused;
+			}
 
 			let (event = self.document.createEvent('Events')) {
 				event.initEvent(self.EVENT_TYPE_SUSPENDED, true, false);
