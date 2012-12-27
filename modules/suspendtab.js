@@ -37,6 +37,7 @@ var EXPORTED_SYMBOLS = ['SuspendTab'];
 
 load('lib/WindowManager');
 load('lib/prefs');
+load('lib/here');
 var timer = require('lib/jstimer');
 
 var bundle = require('lib/locale')
@@ -228,6 +229,28 @@ SuspendTab.prototype = {
 		}
 		else {
 			item.removeAttribute('disabled');
+		}
+
+		if (this.extraMenuItems) {
+			this.extraMenuItems.forEach(function(aItem) {
+				var available = aItem.getAttribute('suspendtab-available');
+				if (available) {
+					available = (new Function(available)).call(this.window);
+					if (available)
+						aItem.removeAttribute('hidden');
+					else
+						aItem.setAttribute('hidden', true);
+				}
+
+				var enabled = aItem.getAttribute('suspendtab-enabled');
+				if (enabled) {
+					enabled = (new Function(enabled)).call(this.window);
+					if (enabled)
+						aItem.removeAttribute('disabled');
+					else
+						aItem.setAttribute('disabled', true);
+				}
+			}, this);
 		}
 	},
 
@@ -489,8 +512,53 @@ SuspendTab.prototype = {
 		this.tabContextItem.setAttribute('id', 'context_toggleTabSuspended');
 		this.tabContextItem.addEventListener('command', this, false);
 
-		this.tabContextPopup.insertBefore(this.tabContextItem, this.document.getElementById('context_undoCloseTab'));
+		var undoItem = this.document.getElementById('context_undoCloseTab');
+		this.tabContextPopup.insertBefore(this.tabContextItem, undoItem);
 		this.tabContextPopup.addEventListener('popupshowing', this, false);
+
+		this.extraMenuItems = [];
+
+		var TST = this.browser.treeStyleTab;
+		if (TST) {
+			let collectTreeTabs = here(/*
+				var tab = gBrowser.mContextTab;
+				var tabs = [tab].concat(gBrowser.treeStyleTab.getDescendantTabs(tab));
+			*/);
+			let (item = this.document.createElement('menuitem')) {
+				this.extraMenuItems.push(item);
+				item.setAttribute('id', 'context_suspendTree');
+				item.setAttribute('label', bundle.getString('tab.suspendTree.label'));
+				item.setAttribute('accesskey', bundle.getString('tab.suspendTree.accesskey'));
+				item.setAttribute('oncommand', collectTreeTabs + here(/*
+					tabs.forEach(function(aTab) {
+						SuspendTab.suspend(aTab);
+					});
+				*/));
+				item.setAttribute('suspendtab-enabled', collectTreeTabs + here(/*
+					return tabs.some(function(aTab) {
+						return !SuspendTab.isSuspended(aTab);
+					});
+				*/));
+				item.setAttribute('suspendtab-available', collectTreeTabs + 'return tabs.length;');
+			}
+			let (item = this.document.createElement('menuitem')) {
+				this.extraMenuItems.push(item);
+				item.setAttribute('id', 'context_resumeTree');
+				item.setAttribute('label', bundle.getString('tab.resumeTree.label'));
+				item.setAttribute('accesskey', bundle.getString('tab.resumeTree.accesskey'));
+				item.setAttribute('oncommand', collectTreeTabs + here(/*
+					tabs.forEach(function(aTab) {
+						SuspendTab.resume(aTab);
+					});
+				*/));
+				item.setAttribute('suspendtab-enabled', collectTreeTabs + here(/*
+					return tabs.some(function(aTab) {
+						return SuspendTab.isSuspended(aTab);
+					});
+				*/));
+				item.setAttribute('suspendtab-available', collectTreeTabs + 'return tabs.length;');
+			}
+		}
 	},
 
 	destroy : function()
@@ -523,6 +591,13 @@ SuspendTab.prototype = {
 		this.tabContextItem.removeEventListener('command', this, false);
 		this.tabContextItem.parentNode.removeChild(this.tabContextItem);
 		delete this.tabContextItem;
+
+		if (this.extraMenuItems) {
+			this.extraMenuItems.forEach(function(aItem) {
+				aItem.parentNode.removeChild(aItem);
+			});
+			delete this.extraMenuItems;
+		}
 	},
 
 
