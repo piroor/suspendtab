@@ -93,8 +93,6 @@
 					preference="autoSuspend.resetOnReload"/>
 				<groupbox orient="vertical">
 					<caption label="{{ label.getString('autoSuspend.blockList.caption') }}"/>
-					<description value="{{ label.getString('autoSuspend.blockList.description1') }}"/>
-					<description value="{{ label.getString('autoSuspend.blockList.description2') }}"/>
 					<textbox id="autoSuspend.blockList-textbox"
 						preference="autoSuspend.blockList"
 						multiline="true"
@@ -107,6 +105,12 @@
 							var textbox = document.getElementById('autoSuspend.blockList-textbox');
 							return textbox.value.replace(/^\s+|\s+$/g, '').replace(/\s+/g, ' ');
 						"/>
+					<description value="{{ label.getString('autoSuspend.blockList.description1') }}"
+						control="autoSuspend.blockList-textbox"/>
+					<description value="{{ label.getString('autoSuspend.blockList.description2') }}"
+						control="autoSuspend.blockList-textbox"/>
+					<description value="{{ label.getString('autoSuspend.blockList.description3') }}"
+						control="autoSuspend.blockList-textbox"/>
 				</groupbox>
 			</vbox>
 		</hbox>
