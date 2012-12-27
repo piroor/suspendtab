@@ -543,7 +543,9 @@ SuspendTab.prototype = {
 						return !SuspendTab.isSuspended(aTab);
 					});
 				*/));
-				item.setAttribute('suspendtab-available', collectTreeTabs + 'return tabs.length;');
+				item.setAttribute('suspendtab-available',
+					'return gBrowser.treeStyleTab.hasChildTabs(gBrowser.mContextTab);');
+				this.tabContextPopup.insertBefore(item, undoItem);
 			}
 			let (item = this.document.createElement('menuitem')) {
 				this.extraMenuItems.push(item);
@@ -560,7 +562,9 @@ SuspendTab.prototype = {
 						return SuspendTab.isSuspended(aTab);
 					});
 				*/));
-				item.setAttribute('suspendtab-available', collectTreeTabs + 'return tabs.length;');
+				item.setAttribute('suspendtab-available',
+					'return gBrowser.treeStyleTab.hasChildTabs(gBrowser.mContextTab);');
+				this.tabContextPopup.insertBefore(item, undoItem);
 			}
 		}
 	},
