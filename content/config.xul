@@ -104,8 +104,8 @@
 							return pref.value.replace(/^\s+|\s+$/g, '').replace(/\s+/g, '\n');
 						"
 						onsynctopreference="
-							var pref = document.getElementById('autoSuspend.blockList');
-							return pref.value.replace(/^\s+|\s+$/g, '').replace(/\s+/g, '\n');
+							var textbox = document.getElementById('autoSuspend.blockList-textbox');
+							return textbox.value.replace(/^\s+|\s+$/g, '').replace(/\s+/g, ' ');
 						"/>
 				</groupbox>
 			</vbox>
