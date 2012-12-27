@@ -614,6 +614,8 @@ SuspendTab.prototype = {
 				self.readyToResume(aTab);
 			}
 
+			aTab.setAttribute('pending', true);
+
 			let (event = self.document.createEvent('Events')) {
 				event.initEvent(self.EVENT_TYPE_SUSPENDED, true, false);
 				aTab.dispatchEvent(event);
