@@ -140,14 +140,11 @@ SuspendTab.prototype = {
 		if (!('_blockList' in this)) {
 			this._blockList = prefs.getPref(this.domain + 'autoSuspend.blockList');
 			this._blockList = this._blockList.split(/\s+/).map(function(aItem) {
-			}).filter(function(aItem) {
-				return !!aItem;
-			}).map(function(aItem) {
 				try {
 					var regexp = aItem.replace(/\./g, '\\.')
 									.replace(/\?/g, '.')
 									.replace(/\*/g, '.*');
-					return regexp && new RegExp('\\b' + regexp + '$');
+					return regexp && new RegExp('\\b' + regexp + '$', 'i');
 				}
 				catch(error) {
 					Components.utils.reportError(new Error('suspendtab: invalid block rule "' + aItem + '"'));
@@ -716,7 +713,7 @@ SuspendTab.prototype = {
 			}
 		}
 		else {
-			let event = self.document.createEvent('Events');
+			let event = this.document.createEvent('Events');
 			event.initEvent(this.EVENT_TYPE_RESUMED, true, false);
 			aTab.dispatchEvent(event);
 		}
