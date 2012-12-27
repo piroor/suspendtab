@@ -55,6 +55,9 @@
 			<preference id="autoSuspend.resetOnReload"
 				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.resetOnReload"
 				type="bool"/>
+			<preference id="autoSuspend.blockList"
+				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.blockList"
+				type="string"/>
 		</preferences>
 
 		<checkbox label="{{ label.getString('autoSuspend.enabled') }}"
@@ -85,8 +88,27 @@
 		</hbox>
 		<hbox align="center">
 			<spacer style="width:1em;"/>
-			<checkbox label="{{ label.getString('autoSuspend.resetOnReload') }}"
-				preference="autoSuspend.resetOnReload"/>
+			<vbox>
+				<checkbox label="{{ label.getString('autoSuspend.resetOnReload') }}"
+					preference="autoSuspend.resetOnReload"/>
+				<groupbox orient="vertical">
+					<caption label="{{ label.getString('autoSuspend.blockList.caption') }}"/>
+					<description value="{{ label.getString('autoSuspend.blockList.description1') }}"/>
+					<description value="{{ label.getString('autoSuspend.blockList.description2') }}"/>
+					<textbox id="autoSuspend.blockList-textbox"
+						preference="autoSuspend.blockList"
+						multiline="true"
+						rows="5"
+						onsyncfrompreference="
+							var pref = document.getElementById('autoSuspend.blockList');
+							return pref.value.replace(/^\s+|\s+$/g, '').replace(/\s+/g, '\n');
+						"
+						onsynctopreference="
+							var pref = document.getElementById('autoSuspend.blockList');
+							return pref.value.replace(/^\s+|\s+$/g, '').replace(/\s+/g, '\n');
+						"/>
+				</groupbox>
+			</vbox>
 		</hbox>
 	</prefpane>
 
