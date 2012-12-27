@@ -436,24 +436,23 @@ SuspendTab.prototype = {
 
 	destroy : function()
 	{
-		if (!this.window)
-			return;
+		if (this.window) {
+			this.cancelTimers();
 
-		this.cancelTimers();
+			this.destroyMenuItems();
 
-		this.destroyMenuItems();
+			prefs.removePrefListener(this);
 
-		prefs.removePrefListener(this);
+			this.window.removeEventListener('unload', this, false);
+			this.window.removeEventListener('TabSelect', this, true);
+			this.window.removeEventListener('TabClose', this, true);
+			this.window.removeEventListener('SSTabRestoring', this, true);
+			this.window.removeEventListener('SSTabRestored', this, true);
+			this.browser.removeEventListener('load', this, true);
+			this.browser.removeEventListener('DOMTitleChanged', this, true);
 
-		this.window.removeEventListener('unload', this, false);
-		this.window.removeEventListener('TabSelect', this, true);
-		this.window.removeEventListener('TabClose', this, true);
-		this.window.removeEventListener('SSTabRestoring', this, true);
-		this.window.removeEventListener('SSTabRestored', this, true);
-		this.browser.removeEventListener('load', this, true);
-		this.browser.removeEventListener('DOMTitleChanged', this, true);
-
-		delete this.window;
+			delete this.window;
+		}
 
 		if (SuspendTab)
 			SuspendTab.instances.splice(SuspendTab.instances.indexOf(this), 1);
