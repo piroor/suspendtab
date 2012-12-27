@@ -348,9 +348,10 @@ SuspendTab.prototype = {
 		if (aTab.pinned) return false;
 
 		if (this.blockList) {
-			let domain = this._getDomainFromURI(aTab.linkedBrowser.currentURI);
+			let uri = aTab.linkedBrowser.currentURI;
+			let domain = this._getDomainFromURI(uri);
 			if (this.blockList.some(function(aRule) {
-					return aRule.test(domain);
+					return aRule.test(aRule.source.indexOf('/') < 0 ? domain : uri.spec);
 				}))
 				return false;
 		}
