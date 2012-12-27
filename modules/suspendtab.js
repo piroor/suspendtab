@@ -351,7 +351,6 @@ SuspendTab.prototype = {
 			let domain = this._getDomainFromURI(uri);
 			if (this.blockList.some(function(aRule) {
 					var target = aRule.source.indexOf('/') < 0 ? domain : uri.spec;
-					Application.console.log(aRule+' vs '+target+' => '+aRule.test(target));
 					return aRule.test(target);
 				}))
 				return false;
