@@ -71,6 +71,22 @@ var internalSS = (function() {;
 	}
 })();
 
+function isInternalAPIsAvailable() {
+	if (!internalSS) {
+		Components.utils.reportError(new Error('suspendtab: Failed to load internal SessionStore service'));
+		return false;
+	}
+	if (!internalSS.restoreDocument) {
+		Components.utils.reportError(new Error('suspendtab: SessionStore service does not have restoreDocument() method'));
+		return false;
+	}
+	if (!internalSS._deserializeHistoryEntry) {
+		Components.utils.reportError(new Error('suspendtab: SessionStore service does not have _deserializeHistoryEntry() method'));
+		return false;
+	}
+	return true;
+}
+
 var fullStates = {};
 
 function SuspendTab(aWindow)
@@ -389,7 +405,7 @@ SuspendTab.prototype = {
 	{
 		SuspendTab.instances.push(this);
 
-		if (!internalSS) return;
+		if (!isInternalAPIsAvailable()) return;
 
 		this.window = aWindow;
 
