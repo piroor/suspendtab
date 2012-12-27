@@ -232,19 +232,23 @@ SuspendTab.prototype = {
 		}
 
 		if (this.extraMenuItems) {
+			let sandbox = new Cu.Sandbox(
+					this.window,
+					{ sandboxPrototype: this.window }
+				);
 			this.extraMenuItems.forEach(function(aItem) {
-				var available = aItem.getAttribute('suspendtab-available');
-				if (available) {
-					available = (new Function(available)).call(this.window);
+				var availableChecker = aItem.getAttribute('suspendtab-available');
+				if (availableChecker) {
+					let available = Cu.evalInSandbox('(function() { ' + availableChecker + '})()', sandbox)
 					if (available)
 						aItem.removeAttribute('hidden');
 					else
 						aItem.setAttribute('hidden', true);
 				}
 
-				var enabled = aItem.getAttribute('suspendtab-enabled');
-				if (enabled) {
-					enabled = (new Function(enabled)).call(this.window);
+				var enabledChecker = aItem.getAttribute('suspendtab-enabled');
+				if (enabledChecker) {
+					let enabled = Cu.evalInSandbox('(function() { ' + enabledChecker + '})()', sandbox)
 					if (enabled)
 						aItem.removeAttribute('disabled');
 					else
