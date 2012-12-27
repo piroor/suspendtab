@@ -198,13 +198,12 @@ SuspendTab.prototype = {
 
 		switch (aData)
 		{
+			case this.domain + 'autoSuspend.blockList':
+				delete this._blockList;
 			case this.domain + 'autoSuspend.enabled':
 			case this.domain + 'autoSuspend.timeout':
 			case this.domain + 'autoSuspend.timeout.factor':
 				return this.setTimers(true);
-			case this.domain + 'autoSuspend.blockList':
-				delete this._blockList;
-				return;
 		}
 	},
 
