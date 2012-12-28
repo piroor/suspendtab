@@ -44,4 +44,7 @@ config.setDefault(domain+'autoSuspend.timeout.factor', 1000 * 60);
 config.setDefault(domain+'autoSuspend.blockList', '');
 config.setDefault(domain+'autoSuspend.resetOnReload', true);
 config.setDefault(domain+'saferSuspend', true);
+config.setDefault(domain+'menu.context_toggleTabSuspended', true);
+config.setDefault(domain+'menu.context_suspendTree', true);
+config.setDefault(domain+'menu.context_resumeTree', true);
 config.setDefault(domain+'debug', false);

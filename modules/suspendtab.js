@@ -237,22 +237,18 @@ SuspendTab.prototype = {
 			);
 		this.extraMenuItems.forEach(function(aItem) {
 			var availableChecker = aItem.getAttribute('suspendtab-available');
-			if (availableChecker) {
-				let available = Cu.evalInSandbox('(function() { ' + availableChecker + '})()', sandbox)
-				if (available)
-					aItem.removeAttribute('hidden');
-				else
-					aItem.setAttribute('hidden', true);
-			}
+			var available = (availableChecker ? Cu.evalInSandbox('(function() { ' + availableChecker + '})()', sandbox) : true);
+			if (available && prefs.getPref(this.domain + 'menu.' + aItem.id))
+				aItem.removeAttribute('hidden');
+			else
+				aItem.setAttribute('hidden', true);
 
 			var enabledChecker = aItem.getAttribute('suspendtab-enabled');
-			if (enabledChecker || isNoOtherTab) {
-				let enabled = Cu.evalInSandbox('(function() { ' + enabledChecker + '})()', sandbox)
-				if (enabled && !isNoOtherTab)
-					aItem.removeAttribute('disabled');
-				else
-					aItem.setAttribute('disabled', true);
-			}
+			var enabled = (enabledChecker ? Cu.evalInSandbox('(function() { ' + enabledChecker + '})()', sandbox) : true);
+			if (enabled && !isNoOtherTab)
+				aItem.removeAttribute('disabled');
+			else
+				aItem.setAttribute('disabled', true);
 		}, this);
 	},
 
