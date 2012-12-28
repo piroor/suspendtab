@@ -455,7 +455,8 @@ SuspendTab.prototype = {
 	{
 		Array.forEach(this.tabs, function(aTab) {
 			this.cancelTimer(aTab);
-			if (aTab.getAttribute(this.SUSPENDED) == 'true')
+			if (!aRestoreOnlySuspendedByMe ||
+				aTab.getAttribute(this.SUSPENDED) == 'true')
 				this.resume(aTab);
 		}, this);
 	},
@@ -895,9 +896,9 @@ SuspendTab.prototype = {
 
 SuspendTab.instances = [];
 
-SuspendTab.resumeAll = function(true) {
+SuspendTab.resumeAll = function(aRestoreOnlySuspendedByMe) {
 	this.instances.forEach(function(aInstance) {
-		aInstance.resumeAll(true);
+		aInstance.resumeAll(aRestoreOnlySuspendedByMe);
 	});
 };
 
