@@ -38,8 +38,8 @@
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	title="{{ label.getString('title') }}">
 
-	<prefpane id="prefpane-general">
-		label="{{ label.getString('tab.general') }}"
+	<prefpane id="prefpane-general"
+		label="{{ label.getString('tab.general') }}">
 		<preferences>
 			<preference id="autoSuspend.enabled"
 				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.enabled"
@@ -114,8 +114,8 @@
 		</hbox>
 	</prefpane>
 
-	<prefpane id="prefpane-menu">
-		label="{{ label.getString('tab.menu') }}"
+	<prefpane id="prefpane-menu"
+		label="{{ label.getString('tab.menu') }}">
 		<preferences>
 			<preference id="menu.context_toggleTabSuspended"
 				name="extensions.suspendtab@piro.sakura.ne.jp.menu.context_toggleTabSuspended"
