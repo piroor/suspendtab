@@ -223,7 +223,8 @@ SuspendTab.prototype = {
 			item.setAttribute('accesskey',  bundle.getString('tab.suspend.accesskey'));
 		}
 
-		if (this.tabs.length == 1) {
+		var isNoOtherTab = this.tabs.length == 1;
+		if (isNoOtherTab) {
 			item.setAttribute('disabled', true);
 		}
 		else {
@@ -246,9 +247,9 @@ SuspendTab.prototype = {
 				}
 
 				var enabledChecker = aItem.getAttribute('suspendtab-enabled');
-				if (enabledChecker) {
+				if (enabledChecker || isNoOtherTab) {
 					let enabled = Cu.evalInSandbox('(function() { ' + enabledChecker + '})()', sandbox)
-					if (enabled)
+					if (enabled && !isNoOtherTab)
 						aItem.removeAttribute('disabled');
 					else
 						aItem.setAttribute('disabled', true);
