@@ -516,8 +516,7 @@ SuspendTab.prototype = {
 
 		this.extraMenuItems = [];
 
-		var TST = this.browser.treeStyleTab;
-		if (TST) {
+		if ('TreeStyleTabService' in this.window) {
 			let collectTreeTabs = here(/*
 				var tab = gBrowser.mContextTab;
 				var tabs = [tab].concat(gBrowser.treeStyleTab.getDescendantTabs(tab));
