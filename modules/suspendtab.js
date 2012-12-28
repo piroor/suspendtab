@@ -231,31 +231,29 @@ SuspendTab.prototype = {
 			item.removeAttribute('disabled');
 		}
 
-		if (this.extraMenuItems) {
-			let sandbox = new Cu.Sandbox(
-					this.window,
-					{ sandboxPrototype: this.window }
-				);
-			this.extraMenuItems.forEach(function(aItem) {
-				var availableChecker = aItem.getAttribute('suspendtab-available');
-				if (availableChecker) {
-					let available = Cu.evalInSandbox('(function() { ' + availableChecker + '})()', sandbox)
-					if (available)
-						aItem.removeAttribute('hidden');
-					else
-						aItem.setAttribute('hidden', true);
-				}
+		let sandbox = new Cu.Sandbox(
+				this.window,
+				{ sandboxPrototype: this.window }
+			);
+		this.extraMenuItems.forEach(function(aItem) {
+			var availableChecker = aItem.getAttribute('suspendtab-available');
+			if (availableChecker) {
+				let available = Cu.evalInSandbox('(function() { ' + availableChecker + '})()', sandbox)
+				if (available)
+					aItem.removeAttribute('hidden');
+				else
+					aItem.setAttribute('hidden', true);
+			}
 
-				var enabledChecker = aItem.getAttribute('suspendtab-enabled');
-				if (enabledChecker || isNoOtherTab) {
-					let enabled = Cu.evalInSandbox('(function() { ' + enabledChecker + '})()', sandbox)
-					if (enabled && !isNoOtherTab)
-						aItem.removeAttribute('disabled');
-					else
-						aItem.setAttribute('disabled', true);
-				}
-			}, this);
-		}
+			var enabledChecker = aItem.getAttribute('suspendtab-enabled');
+			if (enabledChecker || isNoOtherTab) {
+				let enabled = Cu.evalInSandbox('(function() { ' + enabledChecker + '})()', sandbox)
+				if (enabled && !isNoOtherTab)
+					aItem.removeAttribute('disabled');
+				else
+					aItem.setAttribute('disabled', true);
+			}
+		}, this);
 	},
 
 	onCommand : function(aEvent)
@@ -600,12 +598,10 @@ SuspendTab.prototype = {
 		this.tabContextItem.parentNode.removeChild(this.tabContextItem);
 		delete this.tabContextItem;
 
-		if (this.extraMenuItems) {
-			this.extraMenuItems.forEach(function(aItem) {
-				aItem.parentNode.removeChild(aItem);
-			});
-			delete this.extraMenuItems;
-		}
+		this.extraMenuItems.forEach(function(aItem) {
+			aItem.parentNode.removeChild(aItem);
+		});
+		delete this.extraMenuItems;
 	},
 
 
