@@ -236,14 +236,14 @@ SuspendTab.prototype = {
 				{ sandboxPrototype: this.window }
 			);
 		this.extraMenuItems.forEach(function(aItem) {
-			var availableChecker = aItem.getAttribute('suspendtab-available');
+			var availableChecker = aItem.getAttribute(this.MENUITEM_AVAILABLE);
 			var available = (availableChecker ? Cu.evalInSandbox('(function() { ' + availableChecker + '})()', sandbox) : true);
 			if (available && prefs.getPref(this.domain + 'menu.' + aItem.id))
 				aItem.removeAttribute('hidden');
 			else
 				aItem.setAttribute('hidden', true);
 
-			var enabledChecker = aItem.getAttribute('suspendtab-enabled');
+			var enabledChecker = aItem.getAttribute(this.MENUITEM_ENABLED);
 			var enabled = (enabledChecker ? Cu.evalInSandbox('(function() { ' + enabledChecker + '})()', sandbox) : true);
 			if (enabled && !isNoOtherTab)
 				aItem.removeAttribute('disabled');
@@ -451,11 +451,12 @@ SuspendTab.prototype = {
 		}, this.autoSuspendTimeout, this)
 	},
 
-	resumeAll : function()
+	resumeAll : function(aRestoreOnlySuspendedByMe)
 	{
 		Array.forEach(this.tabs, function(aTab) {
 			this.cancelTimer(aTab);
-			this.resume(aTab);
+			if (aTab.getAttribute(this.SUSPENDED) == 'true')
+				this.resume(aTab);
 		}, this);
 	},
 
@@ -531,12 +532,12 @@ SuspendTab.prototype = {
 						SuspendTab.suspend(aTab);
 					});
 				*/));
-				item.setAttribute('suspendtab-enabled', collectTreeTabs + here(/*
+				item.setAttribute(this.MENUITEM_ENABLED, collectTreeTabs + here(/*
 					return tabs.some(function(aTab) {
 						return !SuspendTab.isSuspended(aTab);
 					});
 				*/));
-				item.setAttribute('suspendtab-available',
+				item.setAttribute(this.MENUITEM_AVAILABLE,
 					'return gBrowser.treeStyleTab.hasChildTabs(gBrowser.mContextTab);');
 				this.tabContextPopup.insertBefore(item, undoItem);
 			}
@@ -550,12 +551,12 @@ SuspendTab.prototype = {
 						SuspendTab.resume(aTab);
 					});
 				*/));
-				item.setAttribute('suspendtab-enabled', collectTreeTabs + here(/*
+				item.setAttribute(this.MENUITEM_ENABLED, collectTreeTabs + here(/*
 					return tabs.some(function(aTab) {
 						return SuspendTab.isSuspended(aTab);
 					});
 				*/));
-				item.setAttribute('suspendtab-available',
+				item.setAttribute(this.MENUITEM_AVAILABLE,
 					'return gBrowser.treeStyleTab.hasChildTabs(gBrowser.mContextTab);');
 				this.tabContextPopup.insertBefore(item, undoItem);
 			}
@@ -694,6 +695,7 @@ SuspendTab.prototype = {
 			}
 
 			aTab.setAttribute('pending', true);
+			aTab.setAttribute(self.SUSPENDED, true);
 
 			if (aTab.selected) {
 				let nextFocused = self.getNextFocusedTab(aTab);
@@ -786,6 +788,7 @@ SuspendTab.prototype = {
 				internalSS.restoreDocument(browser.ownerDocument.defaultView, browser, aEvent);
 
 				aTab.removeAttribute('pending');
+				aTab.removeAttribute(self.SUSPENDED);
 
 				let event = self.document.createEvent('Events');
 				event.initEvent(self.EVENT_TYPE_RESUMED, true, false);
@@ -892,16 +895,16 @@ SuspendTab.prototype = {
 
 SuspendTab.instances = [];
 
-SuspendTab.resumeAll = function() {
+SuspendTab.resumeAll = function(true) {
 	this.instances.forEach(function(aInstance) {
-		aInstance.resumeAll();
+		aInstance.resumeAll(true);
 	});
 };
 
 function shutdown(aReason)
 {
 	if (aReason == 'ADDON_DISABLE')
-		SuspendTab.resumeAll();
+		SuspendTab.resumeAll(true);
 
 	SuspendTab.instances.forEach(function(aInstance) {
 		aInstance.destroy();
