@@ -9,7 +9,8 @@
                    em:creator="YUKI &quot;Piro&quot; Hiroshi"
                    em:description="Suspends background old tabs automatically to save memory usage."
                    em:optionsURL="chrome://suspendtab/content/config.xul"
-                   em:bootstrap="true">
+                   em:bootstrap="true"
+                   em:type="2">
 
 
     <em:updateURL>http://piro.sakura.ne.jp/xul/update.rdf</em:updateURL>
