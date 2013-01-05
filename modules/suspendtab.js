@@ -354,7 +354,13 @@ SuspendTab.prototype = {
 			return;
 
 		if (this.isSuspended(tab)) {
-			if (possiblySuspended)
+			if (
+				possiblySuspended &&
+				// The blank page is loaded when it is suspended too.
+				// We have to handle only "reloading of already suspended" tab,
+				// in other words, we must ignore "just now suspended" tab.
+				tab.hasAttribute('pending')
+				)
 				this.resume(tab);
 		}
 		else {
