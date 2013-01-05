@@ -14,7 +14,7 @@
  * The Original Code is Suspend Tab.
  *
  * The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
- * Portions created by the Initial Developer are Copyright (C) 2012
+ * Portions created by the Initial Developer are Copyright (C) 2012-2013
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):: YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -338,18 +338,29 @@ SuspendTab.prototype = {
 
 	onReloaded : function(aEvent)
 	{
-		if (!this.autoSuspendResetOnReload)
+		var w = aEvent.target.defaultView.top;
+		var possiblySuspended = w.location.href == 'about:blank';
+		if (!this.autoSuspendResetOnReload && !possiblySuspended)
 			return;
 
-		var w = aEvent.target.defaultView.top;
-		Array.some(this.tabs, function(aTab) {
-			if (aTab.linkedBrowser.contentWindow != w)
-				return false;
+		var tab;
+		if (!Array.some(this.tabs, function(aTab) {
+				if (aTab.linkedBrowser.contentWindow != w)
+					return false;
 
-			if (!aTab.selected)
-				this.reserveSuspend(aTab);
-			return true;
-		}, this);
+				tab = aTab;
+				return true;
+			}, this))
+			return;
+
+		if (this.isSuspended(tab)) {
+			if (possiblySuspended)
+				this.resume(tab);
+		}
+		else {
+			if (this.autoSuspendResetOnReload && !tab.selected)
+				this.reserveSuspend(tab);
+		}
 	},
 
 	setTimers : function(aReset)
