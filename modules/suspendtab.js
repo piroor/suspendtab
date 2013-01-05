@@ -336,6 +336,12 @@ SuspendTab.prototype = {
 			delete fullStates[id];
 	},
 
+	/**
+	 * This addon handles "reload" of tabs for multiple purposes:
+	 *  1. When a suspended tab is reloaded, restore the tab.
+	 *  2. When a normal tab is reloaded, cancel (and reset)
+	 *     the timer of "auto suspend".
+	 */
 	onReloaded : function(aEvent)
 	{
 		var w = aEvent.target.defaultView.top;
