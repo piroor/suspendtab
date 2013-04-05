@@ -30,7 +30,7 @@ function here() {
 }
 
 function shutdown() {
-	cache = undefiend;
+	cache = undefined;
 }
 
 if (typeof read == 'undefined') {
