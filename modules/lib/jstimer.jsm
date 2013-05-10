@@ -11,11 +11,9 @@
    var interval = namespace.setInterval(callback, 1000, 'OK');
    namespace.clearInterval(interval);
 
- license: The MIT License, Copyright (c) 2010 YUKI "Piro" Hiroshi
-   https://github.com/piroor/fxaddonlibs/blob/master/license.txt
+ license: The MIT License, Copyright (c) 2010-2013 YUKI "Piro" Hiroshi
  original:
-   https://github.com/piroor/fxaddonlibs/blob/master/jstimer.jsm
-   https://github.com/piroor/fxaddonlibs/blob/master/jstimer.test.js
+   http://github.com/piroor/fxaddonlib-jstimer
 */
 
 var Cc = Components.classes;
@@ -34,11 +32,13 @@ function setTimeout()
 	var args = Array.slice(arguments);
 	var callback = args.shift();
 	var timeout = args.shift();
-	if (typeof callback != 'string') {
-		let source = callback;
-		callback = function() { source.apply(getGlobal(), args); };
-		callback.source = source;
-	}
+
+	if (typeof callback != 'function' && !('call' in callback))
+		throw new Error('String type callback is obsolete.');
+
+	var source = callback;
+	callback = function() { source.apply(getGlobal(), args); };
+	callback.source = source;
 	return (new Timer(
 		callback,
 		timeout,
@@ -57,11 +57,13 @@ function setInterval()
 	var args = Array.slice(arguments);
 	var callback = args.shift();
 	var interval = args.shift();
-	if (typeof callback != 'string') {
-		let source = callback;
-		callback = function() { source.apply(getGlobal(), args); };
-		callback.source = source;
-	}
+
+	if (typeof callback != 'function' && !('call' in callback))
+		throw new Error('String type callback is obsolete.');
+
+	var source = callback;
+	callback = function() { source.apply(getGlobal(), args); };
+	callback.source = source;
 	return (new Timer(
 		callback,
 		interval,
@@ -129,10 +131,7 @@ Timer.prototype = {
 			return;
 		}
 
-		if (typeof this.callback == 'function')
-			this.callback();
-		else
-			evalInSandbox(this.callback);
+		this.callback();
 
 		if (this.type == Ci.nsITimer.TYPE_ONE_SHOT)
 			this.cancel();
@@ -156,12 +155,6 @@ Timer.cancelAll = function(aId) {
 Timer.getInstanceById = function(aId) {
 	return this.instances[aId] || null ;
 };
-
-function evalInSandbox(aCode, aSandboxOwner)
-{
-	var sandbox = new Components.utils.Sandbox(aSandboxOwner || 'about:blank');
-	return Components.utils.evalInSandbox(aCode, sandbox);
-}
 
 function getGlobal()
 {
