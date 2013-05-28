@@ -607,6 +607,8 @@ SuspendTab.prototype = {
 			delete this.window;
 		}
 
+		delete this._SessionStoreNS;
+
 		if (SuspendTab)
 			SuspendTab.instances.splice(SuspendTab.instances.indexOf(this), 1);
 	},
@@ -636,8 +638,30 @@ SuspendTab.prototype = {
 	},
 
 	isSuspendedBySS : function(aTab)
+//	isTabNeedToBeRestored: function(aTab)
 	{
-		return aTab.linkedBrowser.__SS_restoreState == 1;
+		var browser = aTab.linkedBrowser;
+		// Firefox 25 and later. See: https://bugzilla.mozilla.org/show_bug.cgi?id=867142
+		if (this.TabRestoreStates &&
+			this.TabRestoreStates.has(browser))
+			return this.TabRestoreStates.isNeedsRestore(browser);
+
+		return browser.__SS_restoreState == 1;
+	},
+	get TabRestoreStates() {
+		return this.SessionStoreNS.TabRestoreStates;
+	},
+	get SessionStoreNS() {
+		if (!this._SessionStoreNS)
+			try {
+				// resource://app/modules/sessionstore/SessionStore.jsm ?
+				this._SessionStoreNS = Components.utils.import('resource:///modules/sessionstore/SessionStore.jsm', {});
+			}
+			catch(e) {
+				this._SessionStoreNS = {};
+			}
+		}
+		return this._SessionStoreNS;
 	},
 
 	suspend : function(aTab)
