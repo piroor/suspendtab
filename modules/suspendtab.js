@@ -652,7 +652,7 @@ SuspendTab.prototype = {
 		return this.SessionStoreNS.TabRestoreStates;
 	},
 	get SessionStoreNS() {
-		if (!this._SessionStoreNS)
+		if (!this._SessionStoreNS) {
 			try {
 				// resource://app/modules/sessionstore/SessionStore.jsm ?
 				this._SessionStoreNS = Components.utils.import('resource:///modules/sessionstore/SessionStore.jsm', {});
