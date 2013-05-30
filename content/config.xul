@@ -15,7 +15,7 @@
    - The Original Code is Suspend Tab.
    -
    - The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
-   - Portions created by the Initial Developer are Copyright (C) 2012
+   - Portions created by the Initial Developer are Copyright (C) 2012-2013
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s): YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -34,12 +34,16 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 <?xml-stylesheet href="chrome://global/skin/"?>
+<!DOCTYPE prefwindow [
+<!ENTITY % mainDTD SYSTEM "chrome://suspendtab/locale/label.dtd">
+%mainDTD;
+]>
 <prefwindow id="suspendtab-config"
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-	title="{{ label.getString('title') }}">
+	title="&title;">
 
 	<prefpane id="prefpane-general"
-		label="{{ label.getString('tab.general') }}">
+		label="&tab.general;">
 		<preferences>
 			<preference id="autoSuspend.enabled"
 				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.enabled"
@@ -58,11 +62,11 @@
 				type="string"/>
 		</preferences>
 
-		<checkbox label="{{ label.getString('autoSuspend.enabled') }}"
+		<checkbox label="&autoSuspend.enabled;"
 			preference="autoSuspend.enabled"/>
 		<hbox align="center">
 			<spacer style="width:1em;"/>
-			<label value="{{ label.getString('autoSuspend.timeout.before') }}"
+			<label value="&autoSuspend.timeout.before;"
 				control="autoSuspend.timeout-textbox"/>
 			<textbox id="autoSuspend.timeout-textbox"
 				preference="autoSuspend.timeout"
@@ -70,27 +74,27 @@
 				size="5"
 				min="0"
 				increment="1"/>
-			<label value="{{ label.getString('autoSuspend.timeout.middle') }}"
+			<label value="&autoSuspend.timeout.middle;"
 				control="autoSuspend.timeout-textbox"/>
 			<menulist id="autoSuspend.timeout.factor-menulist"
 				preference="autoSuspend.timeout.factor">
 				<menupopup>
-					<menuitem label="{{ label.getString('autoSuspend.timeout.factor.hours') }}" value="3600000"/>
-					<menuitem label="{{ label.getString('autoSuspend.timeout.factor.minutes') }}" value="60000"/>
-					<menuitem label="{{ label.getString('autoSuspend.timeout.factor.seconds') }}" value="1000"/>
-					<menuitem label="{{ label.getString('autoSuspend.timeout.factor.milliseconds') }}" value="1"/>
+					<menuitem label="&autoSuspend.timeout.factor.hours;" value="3600000"/>
+					<menuitem label="&autoSuspend.timeout.factor.minutes;" value="60000"/>
+					<menuitem label="&autoSuspend.timeout.factor.seconds;" value="1000"/>
+					<menuitem label="&autoSuspend.timeout.factor.milliseconds;" value="1"/>
 				</menupopup>
 			</menulist>
-			<label value="{{ label.getString('autoSuspend.timeout.after') }}"
+			<label value="&autoSuspend.timeout.after;"
 				control="autoSuspend.timeout-textbox"/>
 		</hbox>
 		<hbox align="center">
 			<spacer style="width:1em;"/>
 			<vbox>
-				<checkbox label="{{ label.getString('autoSuspend.resetOnReload') }}"
+				<checkbox label="&autoSuspend.resetOnReload;"
 					preference="autoSuspend.resetOnReload"/>
 				<groupbox orient="vertical">
-					<caption label="{{ label.getString('autoSuspend.blockList.caption') }}"/>
+					<caption label="&autoSuspend.blockList.caption;"/>
 					<textbox id="autoSuspend.blockList-textbox"
 						preference="autoSuspend.blockList"
 						multiline="true"
@@ -103,11 +107,11 @@
 							var textbox = document.getElementById('autoSuspend.blockList-textbox');
 							return textbox.value.replace(/^\s+|\s+$/g, '').replace(/\s+/g, ' ');
 						"/>
-					<description value="{{ label.getString('autoSuspend.blockList.description1') }}"
+					<description value="&autoSuspend.blockList.description1;"
 						control="autoSuspend.blockList-textbox"/>
-					<description value="{{ label.getString('autoSuspend.blockList.description2') }}"
+					<description value="&autoSuspend.blockList.description2;"
 						control="autoSuspend.blockList-textbox"/>
-					<description value="{{ label.getString('autoSuspend.blockList.description3') }}"
+					<description value="&autoSuspend.blockList.description3;"
 						control="autoSuspend.blockList-textbox"/>
 				</groupbox>
 			</vbox>
@@ -115,7 +119,7 @@
 	</prefpane>
 
 	<prefpane id="prefpane-menu"
-		label="{{ label.getString('tab.menu') }}">
+		label="&tab.menu;">
 		<preferences>
 			<preference id="menu.context_toggleTabSuspended"
 				name="extensions.suspendtab@piro.sakura.ne.jp.menu.context_toggleTabSuspended"
@@ -128,26 +132,14 @@
 				type="bool"/>
 		</preferences>
 		<groupbox orient="vertical">
-			<caption label="{{ label.getString('tabContextMenu.items.caption') }}"/>
-			<checkbox label="{{ label.getString('tab.suspend.label') + ' / ' +
-								label.getString('tab.resume.label') }}"
+			<caption label="&tabContextMenu.items.caption;"/>
+			<checkbox label="&tab.suspend.label; / &tab.resume.label;"
 				preference="menu.context_toggleTabSuspended"/>
 			<separator/>
-			<checkbox label="{{ label.getString('tab.suspendTree.label') }}"
+			<checkbox label="&tab.suspendTree.label;"
 				preference="menu.context_suspendTree"/>
-			<checkbox label="{{ label.getString('tab.resumeTree.label') }}"
+			<checkbox label="&tab.resumeTree.label;"
 				preference="menu.context_resumeTree"/>
 		</groupbox>
 	</prefpane>
-
-	<!-- easyTemplate.js must be loaded at the end, after all other scripts are loaded -->
-	<stringbundleset>
-		<stringbundle id="label" src="chrome://suspendtab/locale/label.properties"/>
-	</stringbundleset>
-	<script type="application/javascript"><![CDATA[
-		Components.classes['@mozilla.org/moz/jssubscript-loader;1']
-			.getService(Components.interfaces.mozIJSSubScriptLoader)
-			.loadSubScript('resource://suspendtab-resources/modules/lib/easyTemplate.js', window);
-		easyTemplate.apply();
-	]]></script>
 </prefwindow>

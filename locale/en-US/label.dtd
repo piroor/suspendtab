@@ -14,7 +14,7 @@
 # The Original Code is the Suspend Tab.
 # 
 # The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
-# Portions created by the Initial Developer are Copyright (C) 2012
+# Portions created by the Initial Developer are Copyright (C) 2012-2013
 # the Initial Developer. All Rights Reserved.
 # 
 # Contributor(s): YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -33,12 +33,26 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-tab.suspend.label=Suspend Tab
-tab.suspend.accesskey=s
-tab.resume.label=Resume Tab
-tab.resume.accesskey=r
+<!ENTITY title "Suspend Tab Configuration">
 
-tab.suspendTree.label=Suspend Tree
-tab.suspendTree.accesskey=s
-tab.resumeTree.label=Resume Tree
-tab.resumeTree.accesskey=r
+<!ENTITY tab.general "General">
+<!ENTITY autoSuspend.enabled "Suspend background tabs automatically">
+<!ENTITY autoSuspend.timeout.before "Suspend tabs after">
+<!ENTITY autoSuspend.timeout.middle "">
+<!ENTITY autoSuspend.timeout.factor.hours "hours">
+<!ENTITY autoSuspend.timeout.factor.minutes "minutes">
+<!ENTITY autoSuspend.timeout.factor.seconds "seconds">
+<!ENTITY autoSuspend.timeout.factor.milliseconds "milli seconds">
+<!ENTITY autoSuspend.timeout.after "past">
+<!ENTITY autoSuspend.resetOnReload "Don't suspend if the tab is reloaded">
+<!ENTITY autoSuspend.blockList.caption "Don't suspend tabs for these pages:">
+<!ENTITY autoSuspend.blockList.description1 "You can specify multiple domains separated by line breaks.">
+<!ENTITY autoSuspend.blockList.description2 "Available wildcatds: ?=any one letter, *=0 or more any letters">
+<!ENTITY autoSuspend.blockList.description3 "ex: example.com http://example.jp/*">
+
+<!ENTITY tab.menu "Menu">
+<!ENTITY tabContextMenu.items.caption "Extra items for the context menu on tabs">
+<!ENTITY tab.suspend.label "Suspend Tab">
+<!ENTITY tab.resume.label "Resume Tab">
+<!ENTITY tab.suspendTree.label "Suspend Tree">
+<!ENTITY tab.resumeTree.label "Resume Tree">
