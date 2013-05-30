@@ -33,7 +33,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var prefs = require('lib/prefs');
+var prefs = require('lib/prefs').prefs;
 
 var SuspendTabConst = require('const');
 var domain = SuspendTabConst.domain;
