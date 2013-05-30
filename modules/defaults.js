@@ -14,7 +14,7 @@
  * The Original Code is Suspend Tab.
  *
  * The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
- * Portions created by the Initial Developer are Copyright (C) 2012
+ * Portions created by the Initial Developer are Copyright (C) 2012-2013
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):: YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -33,18 +33,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var config = require('lib/config');
+var prefs = require('lib/prefs');
 
 var SuspendTabConst = require('const');
 var domain = SuspendTabConst.domain;
 
-config.setDefault(domain+'autoSuspend.enabled', true);
-config.setDefault(domain+'autoSuspend.timeout', 30);
-config.setDefault(domain+'autoSuspend.timeout.factor', 1000 * 60);
-config.setDefault(domain+'autoSuspend.blockList', '');
-config.setDefault(domain+'autoSuspend.resetOnReload', true);
-config.setDefault(domain+'saferSuspend', true);
-config.setDefault(domain+'menu.context_toggleTabSuspended', true);
-config.setDefault(domain+'menu.context_suspendTree', true);
-config.setDefault(domain+'menu.context_resumeTree', true);
-config.setDefault(domain+'debug', false);
+prefs.setDefaultPref(domain+'autoSuspend.enabled', true);
+prefs.setDefaultPref(domain+'autoSuspend.timeout', 30);
+prefs.setDefaultPref(domain+'autoSuspend.timeout.factor', 1000 * 60);
+prefs.setDefaultPref(domain+'autoSuspend.blockList', '');
+prefs.setDefaultPref(domain+'autoSuspend.resetOnReload', true);
+prefs.setDefaultPref(domain+'saferSuspend', true);
+prefs.setDefaultPref(domain+'menu.context_toggleTabSuspended', true);
+prefs.setDefaultPref(domain+'menu.context_suspendTree', true);
+prefs.setDefaultPref(domain+'menu.context_resumeTree', true);
+prefs.setDefaultPref(domain+'debug', false);
