@@ -140,22 +140,25 @@ SuspendTab.prototype = {
 	{
 		if (!('_blockList' in this)) {
 			this._blockList = prefs.getPref(this.domain + 'autoSuspend.blockList');
-			this._blockList = this._blockList.split(/\s+/).map(function(aItem) {
-				try {
-					var regexp = aItem.replace(/\./g, '\\.')
-									.replace(/\?/g, '.')
-									.replace(/\*/g, '.*');
-					regexp = aItem.indexOf('/') < 0 ?
-								'\\b' + regexp + '$' : '^' + regexp;
-					return regexp && new RegExp(regexp, 'i');
-				}
-				catch(error) {
-					Components.utils.reportError(new Error('suspendtab: invalid block rule "' + aItem + '"'));
-					return null;
-				}
-			}).filter(function(aRule) {
-				return !!aRule;
-			});
+
+			if (this._blockList) {
+				this._blockList = this._blockList.split(/\s+/).map(function(aItem) {
+					try {
+						var regexp = aItem.replace(/\./g, '\\.')
+										.replace(/\?/g, '.')
+										.replace(/\*/g, '.*');
+						regexp = aItem.indexOf('/') < 0 ?
+									'\\b' + regexp + '$' : '^' + regexp;
+						return regexp && new RegExp(regexp, 'i');
+					}
+					catch(error) {
+						Components.utils.reportError(new Error('suspendtab: invalid block rule "' + aItem + '"'));
+						return null;
+					}
+				}).filter(function(aRule) {
+					return !!aRule;
+				});
+			}
 		}
 		return this._blockList;
 	},
