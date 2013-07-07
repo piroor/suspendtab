@@ -1,6 +1,7 @@
 # History
 
  - master/HEAD
+   * Fixed: Background tabs are suspended correctly after a while, even if there is no exception. (by YosukeM, thanks!)
  - 0.1.2013053101
    * Modified: Just to pass through AMO Editor's review, make codes free from "evalInSandbox()" and E4X. They were still there only for backward compatibilities so they never caused errors/security issues on lately Firefox, however, editors persecutive rejected those codes, then I've given up and removed them.
  - 0.1.2013052901
