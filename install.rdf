@@ -22,6 +22,7 @@
                        em:name="Suspend Tab"
                        em:description="Suspends background old tabs automatically to save memory usage."
                        em:creator="YUKI &quot;Piro&quot; Hiroshi">
+        <em:contributor>YosukeM</em:contributor>
       </RDF:Description>
     </em:localized>
     <em:localized>
@@ -29,6 +30,7 @@
                        em:name="Suspend Tab"
                        em:description="バックグラウンドのタブを自動的にサスペンドして消費メモリ量を節約します。"
                        em:creator="YUKI &quot;Piro&quot; Hiroshi">
+        <em:contributor>YosukeM</em:contributor>
       </RDF:Description>
     </em:localized>
 
