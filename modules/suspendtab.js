@@ -415,7 +415,6 @@ SuspendTab.prototype = {
 		if (!aURI) return null;
 
 		var spec = aURI.spec;
-		spec = this.window.getShortcutOrURI(spec);
 		var domainMatchResult = spec.match(/^\w+:(?:\/\/)?([^:\/]+)/);
 		return domainMatchResult ?
 				domainMatchResult[1] :
