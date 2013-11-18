@@ -394,9 +394,12 @@ SuspendTab.prototype = {
 
 	isSuspendable : function(aTab)
 	{
-		if (aTab.selected) return false;
-
-		if (aTab.pinned) return false;
+		if (
+			aTab.selected ||
+			aTab.pinned ||
+			aTab.hasAttribute('protected') // protected tab, by Tab Mix Plus or others
+			)
+			return false;
 
 		if (this.blockList) {
 			let uri = aTab.linkedBrowser.currentURI;
