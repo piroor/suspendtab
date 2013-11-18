@@ -667,6 +667,20 @@ SuspendTab.prototype = {
 		return this._SessionStoreNS;
 	},
 
+	get TabState() {
+		if (!this._TabState) {
+			try {
+				let TabStateNS = {};
+				Components.utils.import('resource:///modules/sessionstore/TabState.jsm', TabStateNS);
+				this._TabState = TabStateNS.TabState;
+			}
+			catch(e) {
+				this._TabState = {};
+			}
+		}
+		return this._TabState;
+	},
+
 	suspend : function(aTab)
 	{
 		if (this.isSuspended(aTab))
@@ -699,15 +713,21 @@ SuspendTab.prototype = {
 
 		// If possible, we should use full tab state including sensitive data.
 		// Store it to the volatile storage instaed of the session data, for privacy.
-		if (internalSS._collectTabData) {
-			let state = internalSS._collectTabData(aTab, true);
+		let stateWithPrivateData;
+		if (this.TabState && this.TabState._collectSyncUncached) {
+			stateWithPrivateData = this.TabState._collectSyncUncached(aTab, { includePrivateData: true });
+		}
+		else if (internalSS._collectTabData) {
+			stateWithPrivateData = internalSS._collectTabData(aTab, true);
 			if (internalSS._updateTextAndScrollDataForTab)
-				internalSS._updateTextAndScrollDataForTab(this.window, aTab.linkedBrowser, state, true);
+				internalSS._updateTextAndScrollDataForTab(this.window, aTab.linkedBrowser, stateWithPrivateData, true);
+		}
+		if (stateWithPrivateData) {
 			fullStates[aTab.getAttribute('linkedpanel')] = JSON.stringify({
-				entries   : state.entries,
-				storage   : state.storage || null,
-				index     : state.index,
-				pageStyle : state.pageStyle || null
+				entries   : stateWithPrivateData.entries,
+				storage   : stateWithPrivateData.storage || null,
+				index     : stateWithPrivateData.index,
+				pageStyle : stateWithPrivateData.pageStyle || null
 			});
 		}
 
