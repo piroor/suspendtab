@@ -5,7 +5,7 @@
   <RDF:Description RDF:about="urn:mozilla:install-manifest"
                    em:id="suspendtab@piro.sakura.ne.jp"
                    em:name="Suspend Tab"
-                   em:version="0.1.2013053101"
+                   em:version="0.1.2013111801"
                    em:creator="YUKI &quot;Piro&quot; Hiroshi"
                    em:description="Suspends background old tabs automatically to save memory usage."
                    em:optionsURL="chrome://suspendtab/content/config.xul"

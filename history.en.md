@@ -1,6 +1,7 @@
 # History
 
  - master/HEAD
+ - 0.1.2013111801
    * Works on Firefox 25 and later.
    * Fixed: Background tabs are suspended correctly after a while, even if there is no exception. (by YosukeM, thanks!)
  - 0.1.2013053101
