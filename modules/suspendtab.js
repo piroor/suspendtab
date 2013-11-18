@@ -750,7 +750,7 @@ SuspendTab.prototype = {
 			// Because Firefox sets the default favicon on this event loop,
 			// we have to reset the favicon in the next loop.
 			timer.setTimeout(function() {
-				aTab.setAttribute('image', state.attributes.image);
+				aTab.setAttribute('image', state.attributes.image || state.image);
 			}, 0);
 
 			browser.docShell.setCurrentURI(uri);
