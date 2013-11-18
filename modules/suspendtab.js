@@ -714,13 +714,17 @@ SuspendTab.prototype = {
 		// If possible, we should use full tab state including sensitive data.
 		// Store it to the volatile storage instaed of the session data, for privacy.
 		let stateWithPrivateData;
-		if (this.TabState && this.TabState._collectSyncUncached) {
+		if (this.TabState && this.TabState._collectSyncUncached) { // Firefox 28 and later
 			stateWithPrivateData = this.TabState._collectSyncUncached(aTab, { includePrivateData: true });
 		}
-		else if (internalSS._collectTabData) {
-			stateWithPrivateData = internalSS._collectTabData(aTab, true);
-			if (internalSS._updateTextAndScrollDataForTab)
-				internalSS._updateTextAndScrollDataForTab(this.window, aTab.linkedBrowser, stateWithPrivateData, true);
+		else if (internalSS._collectTabData) { // Firefox 27 and olders
+			stateWithPrivateData = internalSS._collectTabData(aTab, true); // the second argument is ignored on Firefox 25 and later...
+			if (internalSS._updateTextAndScrollDataForTab) {
+				if (internalSS._updateTextAndScrollDataForTab.length == 4) // Firefox 24 and olders
+					internalSS._updateTextAndScrollDataForTab(this.window, aTab.linkedBrowser, stateWithPrivateData, true);
+				else
+					internalSS._updateTextAndScrollDataForTab(aTab, stateWithPrivateData, { includePrivateData: true });
+			}
 		}
 		if (stateWithPrivateData) {
 			fullStates[aTab.getAttribute('linkedpanel')] = JSON.stringify({
