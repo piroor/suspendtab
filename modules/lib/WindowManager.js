@@ -1,10 +1,10 @@
 /**
  * @fileOverview Window manager module for restartless addons
  * @author       YUKI "Piro" Hiroshi
- * @version      4
+ * @version      5
  *
  * @license
- *   The MIT License, Copyright (c) 2010-2011 YUKI "Piro" Hiroshi.
+ *   The MIT License, Copyright (c) 2010-2014 YUKI "Piro" Hiroshi.
  *   https://github.com/piroor/restartless/blob/master/license.txt
  * @url http://github.com/piroor/restartless
  */
@@ -25,7 +25,7 @@ var _gListener = {
 					.QueryInterface(Ci.nsIInterfaceRequestor)
 					.getInterface(Ci.nsIWebNavigation)
 					.QueryInterface(Ci.nsIDocShell)
-					.QueryInterface(Ci.nsIDocShellTreeNode)
+					.QueryInterface(Ci.nsIDocShellTreeNode || Ci.nsIDocShellTreeItem) // nsIDocShellTreeNode is merged to nsIDocShellTreeItem by https://bugzilla.mozilla.org/show_bug.cgi?id=331376
 					.QueryInterface(Ci.nsIDocShellTreeItem)
 					.parent
 				)
