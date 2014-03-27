@@ -14,7 +14,7 @@
  * The Original Code is Suspend Tab.
  *
  * The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
- * Portions created by the Initial Developer are Copyright (C) 2012-2013
+ * Portions created by the Initial Developer are Copyright (C) 2012-2014
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):: YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -49,8 +49,8 @@ var SS = Cc['@mozilla.org/browser/sessionstore;1']
 
 var internalSS = (function() {;
 	var ns = {
-			atob : function(aInput) { return WindowManager.getWindow('navigator:browser').atob(aInput); },
-			btoa : function(aInput) { return WindowManager.getWindow('navigator:browser').btoa(aInput); }
+			atob : atob,
+			btoa : btoa
 		};
 	try {
 		Cc['@mozilla.org/moz/jssubscript-loader;1']
