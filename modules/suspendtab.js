@@ -73,6 +73,16 @@ var internalSS = (function() {;
 	}
 })();
 
+var SessionHistoryInternal = (function() {;
+	try {
+		var ns = Cu.import('resource:///modules/sessionstore/SessionHistory.jsm', {});
+		return ns.SessionHistoryInternal;
+	}
+	catch(e) {
+		return null;
+	}
+})();
+
 function isInternalAPIsAvailable() {
 	if (!internalSS) {
 		Components.utils.reportError(new Error('suspendtab: Failed to load internal SessionStore service'));
@@ -82,9 +92,17 @@ function isInternalAPIsAvailable() {
 		Components.utils.reportError(new Error('suspendtab: SessionStore service does not have restoreDocument() method'));
 		return false;
 	}
-	if (!internalSS._deserializeHistoryEntry) {
-		Components.utils.reportError(new Error('suspendtab: SessionStore service does not have _deserializeHistoryEntry() method'));
-		return false;
+	if (SessionHistoryInternal) {
+		if (!SessionHistoryInternal.deserializeEntry) {
+			Components.utils.reportError(new Error('suspendtab: SessionHistoryInternal does not have deserializeEntry() method'));
+			return false;
+		}
+	}
+	else {
+		if (!internalSS._deserializeHistoryEntry) {
+			Components.utils.reportError(new Error('suspendtab: SessionStore service does not have _deserializeHistoryEntry() method'));
+			return false;
+		}
 	}
 	return true;
 }
@@ -951,9 +969,16 @@ SuspendTab.prototype = {
 
 		aIdMap = aIdMap || { used : {} };
 		aDocIdentMap = aDocIdentMap || {};
-		state.entries.forEach(function(aEntry) {
-			SHistory.addEntry(internalSS._deserializeHistoryEntry(aEntry, aIdMap, aDocIdentMap), true);
-		});
+		if (SessionHistoryInternal && SessionHistoryInternal.deserializeEntry) {
+			state.entries.forEach(function(aEntry) {
+				SHistory.addEntry(SessionHistoryInternal.deserializeEntry(aEntry, aIdMap, aDocIdentMap), true);
+			});
+		}
+		else {
+			state.entries.forEach(function(aEntry) {
+				SHistory.addEntry(internalSS._deserializeHistoryEntry(aEntry, aIdMap, aDocIdentMap), true);
+			});
+		}
 
 		/*
 		// We don't have to restore session storage because we didn't clear it
