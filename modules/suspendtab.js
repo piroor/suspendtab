@@ -92,13 +92,13 @@ function isInternalAPIsAvailable() {
 		Components.utils.reportError(new Error('suspendtab: SessionStore service does not have restoreDocument() method'));
 		return false;
 	}
-	if (SessionHistoryInternal) {
+	if (SessionHistoryInternal) { // Firefox 28 and later
 		if (!SessionHistoryInternal.deserializeEntry) {
 			Components.utils.reportError(new Error('suspendtab: SessionHistoryInternal does not have deserializeEntry() method'));
 			return false;
 		}
 	}
-	else {
+	else { // Firefox 27 and older
 		if (!internalSS._deserializeHistoryEntry) {
 			Components.utils.reportError(new Error('suspendtab: SessionStore service does not have _deserializeHistoryEntry() method'));
 			return false;
@@ -969,12 +969,12 @@ SuspendTab.prototype = {
 
 		aIdMap = aIdMap || { used : {} };
 		aDocIdentMap = aDocIdentMap || {};
-		if (SessionHistoryInternal && SessionHistoryInternal.deserializeEntry) {
+		if (SessionHistoryInternal && SessionHistoryInternal.deserializeEntry) { // Firefox 28 and later
 			state.entries.forEach(function(aEntry) {
 				SHistory.addEntry(SessionHistoryInternal.deserializeEntry(aEntry, aIdMap, aDocIdentMap), true);
 			});
 		}
-		else {
+		else { // Firefox 27 and older
 			state.entries.forEach(function(aEntry) {
 				SHistory.addEntry(internalSS._deserializeHistoryEntry(aEntry, aIdMap, aDocIdentMap), true);
 			});
