@@ -1,13 +1,33 @@
 /**
  * @fileOverview Loader module for restartless addons
  * @author       YUKI "Piro" Hiroshi
- * @version      10
+ * @version      11
  *
  * @license
  *   The MIT License, Copyright (c) 2010-2014 YUKI "Piro" Hiroshi.
  *   https://github.com/piroor/restartless/blob/master/license.txt
  * @url http://github.com/piroor/restartless
  */
+
+function toPropertyDescriptors(aProperties) {
+	var descriptors = {};
+	Object.keys(aProperties).forEach(function(aProperty) {
+		var description = Object.getOwnPropertyDescriptor(aProperties, aProperty);
+		descriptors[aProperty] = description;
+	});
+	return descriptors;
+}
+
+function inherit(aParent, aExtraProperties) {
+	if (!Object.create) {
+		aExtraProperties.__proto__ = aParent;
+		return aExtraProperties;
+	}
+	if (aExtraProperties)
+		return Object.create(aParent, toPropertyDescriptors(aExtraProperties));
+	else
+		return Object.create(aParent);
+}
 
 /** You can customize shared properties for loaded scripts. */
 var Application = (function() {
@@ -42,7 +62,10 @@ var _namespacePrototype = {
 		},
 		atob    : function(aInput) {
 			return atob(aInput);
-		}
+		},
+		inherit : function(aParent, aExtraProperties) {
+			return inherit(aParent, aExtraProperties);
+		},
 	};
 var _namespaces;
 
@@ -55,7 +78,6 @@ var _namespaces;
  *
  * @param {String} aScriptURL
  *   URL of a script. Wrapped version of load() can handle related path.
-
  *   Related path will be resolved based on the location of the caller script.
  * @param {Object=} aExportTargetForImport
  *   EXPORTED_SYMBOLS in the loaded script will be exported to the object.
@@ -159,7 +181,7 @@ function exists(aPath, aBaseURI)
 		var reader = Components.classes['@mozilla.org/libjar/zip-reader;1']
 						.createInstance(Components.interfaces.nsIZipReader);
 		reader.open(baseURI.JARFile.QueryInterface(Components.interfaces.nsIFileURL).file);
-	    try {
+		try {
 			let baseEntry = baseURI.JAREntry.replace(/[^\/]+$/, '');
 			let entries = reader.findEntries(baseEntry + aPath + '$');
 			let found = entries.hasMore();
@@ -251,8 +273,7 @@ function _createNamespace(aURISpec, aRoot)
 						IOService.newURI(aRoot, null, null)
 					) :
 					aRoot ;
-	var ns = {
-			__proto__ : _namespacePrototype,
+	var ns = inherit(_namespacePrototype, {
 			location : _createFakeLocation(baseURI),
 			exists : function(aPath, aBase) {
 				return exists(aPath, aBase || baseURI.spec);
@@ -311,7 +332,7 @@ function _createNamespace(aURISpec, aRoot)
 				return doAndWait(aAsyncTask);
 			},
 			exports : {}
-		};
+		});
 	return ns;
 }
 
