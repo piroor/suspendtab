@@ -83,10 +83,10 @@ var SessionHistoryInternal = (function() {;
 	}
 })();
 
-var ContentRestoreInternal = (function() {;
+var ContentRestore = (function() {;
 	try {
 		var ns = Cu.import('resource:///modules/sessionstore/ContentRestore.jsm', {});
-		return ns.ContentRestoreInternal;
+		return ns.ContentRestore;
 	}
 	catch(e) {
 		return null;
@@ -99,9 +99,9 @@ function isInternalAPIsAvailable() {
 		return false;
 	}
 
-	if (ContentRestoreInternal) { // Firefox 29 and later
-		if (!ContentRestoreInternal.prototype.restoreDocument) {
-			Components.utils.reportError(new Error('suspendtab: ContentRestoreInternal does not have restoreDocument() method'));
+	if (ContentRestore) { // Firefox 29 and later
+		if (!ContentRestore) {
+			Components.utils.reportError(new Error('suspendtab: ContentRestore does not defined'));
 			return false;
 		}
 	}
@@ -903,10 +903,18 @@ SuspendTab.prototype = {
 					browser.__SS_restore_pageStyle = state.pageStyle;
 
 				// Restore form data and scrolled positions.
-				if (ContentRestoreInternal) // Firefox 29 and later
-					new ContentRestoreInternal(browser).restoreDocument();
-				else // Firefox 28 and older
+				if (ContentRestore && browser.messageManager) { // Firefox 29 and later
+					browser.messageManager.sendAsyncMessage(
+						'SessionStore:restoreHistory',
+						{
+							tabData : state,
+							epoch   : 1
+						}
+					);
+				}
+				else { // Firefox 28 and older
 					internalSS.restoreDocument(browser.ownerDocument.defaultView, browser, aEvent);
+				}
 
 				aTab.removeAttribute('pending');
 				aTab.removeAttribute(self.SUSPENDED);
