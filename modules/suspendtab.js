@@ -83,15 +83,35 @@ var SessionHistoryInternal = (function() {;
 	}
 })();
 
+var ContentRestoreInternal = (function() {;
+	try {
+		var ns = Cu.import('resource:///modules/sessionstore/ContentRestore.jsm', {});
+		return ns.ContentRestoreInternal;
+	}
+	catch(e) {
+		return null;
+	}
+})();
+
 function isInternalAPIsAvailable() {
 	if (!internalSS) {
 		Components.utils.reportError(new Error('suspendtab: Failed to load internal SessionStore service'));
 		return false;
 	}
-	if (!internalSS.restoreDocument) {
-		Components.utils.reportError(new Error('suspendtab: SessionStore service does not have restoreDocument() method'));
-		return false;
+
+	if (ContentRestoreInternal) { // Firefox 29 and later
+		if (!ContentRestoreInternal.prototype.restoreDocument) {
+			Components.utils.reportError(new Error('suspendtab: ContentRestoreInternal does not have restoreDocument() method'));
+			return false;
+		}
 	}
+	else { // Firefox 28 and older
+		if (!internalSS.restoreDocument) {
+			Components.utils.reportError(new Error('suspendtab: SessionStore service does not have restoreDocument() method'));
+			return false;
+		}
+	}
+
 	if (SessionHistoryInternal) { // Firefox 28 and later
 		if (!SessionHistoryInternal.deserializeEntry) {
 			Components.utils.reportError(new Error('suspendtab: SessionHistoryInternal does not have deserializeEntry() method'));
@@ -104,6 +124,7 @@ function isInternalAPIsAvailable() {
 			return false;
 		}
 	}
+
 	return true;
 }
 
@@ -765,6 +786,7 @@ SuspendTab.prototype = {
 			browser.removeEventListener('load', arguments.callee, true);
 
 			aTab.setAttribute('label', label);
+			aTab.setAttribute('visibleLabel', label);
 			if (self.debug)
 				aTab.setAttribute('tooltiptext', label +' (suspended)');
 
@@ -881,7 +903,10 @@ SuspendTab.prototype = {
 					browser.__SS_restore_pageStyle = state.pageStyle;
 
 				// Restore form data and scrolled positions.
-				internalSS.restoreDocument(browser.ownerDocument.defaultView, browser, aEvent);
+				if (ContentRestoreInternal) // Firefox 29 and later
+					new ContentRestoreInternal(browser).restoreDocument();
+				else // Firefox 28 and older
+					internalSS.restoreDocument(browser.ownerDocument.defaultView, browser, aEvent);
 
 				aTab.removeAttribute('pending');
 				aTab.removeAttribute(self.SUSPENDED);
