@@ -253,7 +253,7 @@ SuspendTab.prototype = {
 						aTab.hidden &&
 						!this.internal.getTabState(aOtherTab) // skip suspending tabs
 					);
-				});
+				}, this);
 			return tabs.length ? tabs[0] : null ;
 		}
 
