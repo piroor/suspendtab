@@ -1,7 +1,8 @@
 # History
 
  - master/HEAD
-   * Works on Firefox 28 and later
+   * Works on Firefox 29 and Nightly 32.0a1.
+   * Drop support for Firefox 25, 26, 27 and 28.
  - 0.1.2013111801
    * Works on Firefox 25 and later.
    * Fixed: Background tabs are suspended correctly after a while, even if there is no exception. (by YosukeM, thanks!)

@@ -1,7 +1,8 @@
 # 更新履歴
 
  - master/HEAD
-   * Firefox 28以降に対応
+   * Firefox 29とNightly 32.0a1に対応
+   * Firefox 25から28までのサポートを終了
  - 0.1.2013111801
    * Firefox 25に対応
    * 除外リストが空の時に、一定時間でバックグラウンドのタブを休止する機能が働いていなかったのを修正（by YosukeM, thanks!）
