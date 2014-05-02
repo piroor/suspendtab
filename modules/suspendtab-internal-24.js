@@ -71,17 +71,17 @@ var internalSS = (function() {;
 
 function isInternalAPIsAvailable() {
 	if (!internalSS) {
-		Components.utils.reportError(new Error('suspendtab: Failed to load internal SessionStore service'));
+		Cu.reportError(new Error('suspendtab: Failed to load internal SessionStore service'));
 		return false;
 	}
 
 	if (!internalSS.restoreDocument) {
-		Components.utils.reportError(new Error('suspendtab: SessionStore service does not have restoreDocument() method'));
+		Cu.reportError(new Error('suspendtab: SessionStore service does not have restoreDocument() method'));
 		return false;
 	}
 
 	if (!internalSS._deserializeHistoryEntry) {
-		Components.utils.reportError(new Error('suspendtab: SessionStore service does not have _deserializeHistoryEntry() method'));
+		Cu.reportError(new Error('suspendtab: SessionStore service does not have _deserializeHistoryEntry() method'));
 		return false;
 	}
 

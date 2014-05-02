@@ -110,7 +110,7 @@ SuspendTab.prototype = {
 						return regexp && new RegExp(regexp, 'i');
 					}
 					catch(error) {
-						Components.utils.reportError(new Error('suspendtab: invalid block rule "' + aItem + '"'));
+						Cu.reportError(new Error('suspendtab: invalid block rule "' + aItem + '"'));
 						return null;
 					}
 				}).filter(function(aRule) {
@@ -437,18 +437,15 @@ SuspendTab.prototype = {
 		this.GCTimer = timer.setTimeout(function(aSelf) {
 			aSelf.GCTimer= null;
 
-			const ObserverService = Cc['@mozilla.org/observer-service;1']
-									.getService(Ci.nsIObserverService);
-
-			Components.utils.forceGC();
-			ObserverService.notifyObservers(null, 'child-gc-request', null);
+			Cu.forceGC();
+			Services.obs.notifyObservers(null, 'child-gc-request', null);
 
 			var utils = aSelf.window
 						.QueryInterface(Ci.nsIInterfaceRequestor)
 						.getInterface(Ci.nsIDOMWindowUtils);
 			if (utils.cycleCollect) {
 				utils.cycleCollect();
-				ObserverService.notifyObservers(null, 'child-cc-request', null);
+				Services.obs.notifyObservers(null, 'child-cc-request', null);
 			}
 		}, 0, this);
 	},

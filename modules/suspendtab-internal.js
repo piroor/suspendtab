@@ -19,17 +19,41 @@ var { TabStateCache } = Cu.import('resource:///modules/sessionstore/TabStateCach
 
 function isInternalAPIsAvailable() {
 	if (!SessionStoreInternal) {
-		Components.utils.reportError(new Error('suspendtab: Failed to load SessionStoreInternal'));
+		Cu.reportError(new Error('suspendtab: Failed to load SessionStoreInternal'));
+		return false;
+	}
+	if (!SessionStoreInternal.restoreTabContent) {
+		Cu.reportError(new Error('suspendtab: SessionStoreInternal does not have restoreTabContent() method'));
+		return false;
+	}
+	if (typeof SessionStoreInternal._nextRestoreEpoch == 'undefined') {
+		Cu.reportError(new Error('suspendtab: SessionStoreInternal does not have _nextRestoreEpoch'));
+		return false;
+	}
+	if (typeof SessionStoreInternal._browserEpochs == 'undefined') {
+		Cu.reportError(new Error('suspendtab: SessionStoreInternal does not have _browserEpochs'));
 		return false;
 	}
 
 	if (!TabState) {
-		Components.utils.reportError(new Error('suspendtab: Failed to load TabState'));
+		Cu.reportError(new Error('suspendtab: Failed to load TabState'));
+		return false;
+	}
+	if (!TabState.flush) {
+		Cu.reportError(new Error('suspendtab: TabState does not have flush() method'));
+		return false;
+	}
+	if (!TabState.clone) {
+		Cu.reportError(new Error('suspendtab: TabState does not have clone() method'));
 		return false;
 	}
 
 	if (!TabStateCache) {
-		Components.utils.reportError(new Error('suspendtab: Failed to load TabStateCache'));
+		Cu.reportError(new Error('suspendtab: Failed to load TabStateCache'));
+		return false;
+	}
+	if (TabStateCache.update) {
+		Cu.reportError(new Error('suspendtab: TabStateCache does not have update() method'));
 		return false;
 	}
 
