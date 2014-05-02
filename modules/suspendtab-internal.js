@@ -52,7 +52,7 @@ function isInternalAPIsAvailable() {
 		Cu.reportError(new Error('suspendtab: Failed to load TabStateCache'));
 		return false;
 	}
-	if (TabStateCache.update) {
+	if (!TabStateCache.update) {
 		Cu.reportError(new Error('suspendtab: TabStateCache does not have update() method'));
 		return false;
 	}
