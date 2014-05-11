@@ -385,9 +385,7 @@ SuspendTab.prototype = {
 			timer.clearTimeout(aTab.__suspendtab__timer);
 			aTab.__suspendtab__timestamp = 0;
 			aTab.__suspendtab__timer = null;
-
-			if (this.debug && !this.isSuspended(aTab))
-				aTab.setAttribute('tooltiptext', aTab.visibleLabel || aTab.label);
+			this.updateTooltip(aTab);
 		}
 	},
 
@@ -411,13 +409,6 @@ SuspendTab.prototype = {
 			return this.suspend(aTab);
 		}
 
-		if (this.debug) {
-			let date = (new Date(now + this.autoSuspendTimeout));
-			let label = aTab.visibleLabel || aTab.label;
-			aTab.setAttribute('tooltiptext', label +' (to be suspended at '+date+')');
-			dump('  => will be suspended at '+date+'\n');
-		}
-
 		aTab.__suspendtab__timestamp = timestamp || now;
 		aTab.__suspendtab__timer = timer.setTimeout(function(aSelf) {
 			aTab.__suspendtab__timestamp = 0;
@@ -425,6 +416,22 @@ SuspendTab.prototype = {
 			if (aSelf.autoSuspend)
 				aSelf.suspend(aTab);
 		}, this.autoSuspendTimeout, this)
+
+		this.updateTooltip(aTab);
+	},
+
+	updateTooltip : function(aTab)
+	{
+		if (!this.debug || !this.isSuspended(aTab)) {
+			aTab.setAttribute('tooltiptext', aTab.visibleLabel || aTab.label);
+			return;
+		}
+
+		var now = aTab.__suspendtab__timestamp || Date.now();
+		var date = (new Date(now + this.autoSuspendTimeout));
+		var label = aTab.visibleLabel || aTab.label;
+		aTab.setAttribute('tooltiptext', label +' (to be suspended at '+date+')');
+		dump('  => will be suspended at '+date+'\n');
 	},
 
 	resumeAll : function(aRestoreOnlySuspendedByMe)
