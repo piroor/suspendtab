@@ -387,7 +387,7 @@ SuspendTab.prototype = {
 			aTab.__suspendtab__timer = null;
 
 			if (this.debug && !this.isSuspended(aTab))
-				aTab.setAttribute('tooltiptext', aTab.label);
+				aTab.setAttribute('tooltiptext', aTab.visibleLabel || aTab.label);
 		}
 	},
 
@@ -413,7 +413,8 @@ SuspendTab.prototype = {
 
 		if (this.debug) {
 			let date = (new Date(now + this.autoSuspendTimeout));
-			aTab.setAttribute('tooltiptext', aTab.label +' (to be suspended at '+date+')');
+			let label = aTab.visibleLabel || aTab.label;
+			aTab.setAttribute('tooltiptext', label +' (to be suspended at '+date+')');
 			dump('  => will be suspended at '+date+'\n');
 		}
 
