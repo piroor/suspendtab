@@ -434,6 +434,22 @@ SuspendTab.prototype = {
 		dump('  => will be suspended at '+date+'\n');
 	},
 
+	get MutationObserver()
+	{
+		var w = this.window;
+		return w.MutationObserver || w.MozMutationObserver;
+	},
+
+	onMutation : function(aMutations, aObserver)
+	{
+		aMutations.forEach(function(aMutation) {
+			var target = aMutation.target;
+			if (target.localName != 'tab')
+				return;
+			this.updateTooltip(target);
+		}, this);
+	},
+
 	resumeAll : function(aRestoreOnlySuspendedByMe)
 	{
 		this.internal.resumeAll(aRestoreOnlySuspendedByMe);
@@ -477,6 +493,18 @@ SuspendTab.prototype = {
 		this.setTimers();
 
 		prefs.addPrefListener(this);
+
+		this.observer = new this.MutationObserver((function(aMutations, aObserver) {
+			this.onMutation(aMutations, aObserver);
+		}).bind(this));
+		this.observer.observe(this.browser.tabContainer, {
+			attributes      : true,
+			subtree         : true,
+			attributeFilter : [
+				'label',
+				'visibleLabel'
+			]
+		});
 
 		this.initMenuItems();
 	},
@@ -547,6 +575,9 @@ SuspendTab.prototype = {
 			this.destroyMenuItems();
 
 			prefs.removePrefListener(this);
+
+			this.observer.disconnect();
+			delete this.observer;
 
 			this.window.removeEventListener('unload', this, false);
 			this.window.removeEventListener('TabSelect', this, true);
