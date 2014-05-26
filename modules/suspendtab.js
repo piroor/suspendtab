@@ -300,8 +300,7 @@ SuspendTab.prototype = {
 	onToggleExceptionCommand : function(aEvent)
 	{
 		var tab = this.browser.mContextTab;
-		var uri = tab.linkedBrowser.currentURI;
-		var domain = this._getDomainFromURI(uri);
+		var domain = tab.linkedBrowser.currentURI.host;
 
 		var list = prefs.getPref(this.domain + 'autoSuspend.blockList') || '';
 		if (this.isBlocked(tab)) {
@@ -393,22 +392,11 @@ SuspendTab.prototype = {
 		if (!this.blockList)
 			return false;
 
-		var uri = aTab.linkedBrowser.currentURI;
-		var domain = this._getDomainFromURI(uri);
+		var domain = aTab.linkedBrowser.currentURI.host;
 		return this.blockList.some(function(aRule) {
 			var target = aRule.source.indexOf('/') < 0 ? domain : uri.spec;
 			return aRule.test(target);
 		});
-	},
-	_getDomainFromURI : function (aURI) 
-	{
-		if (!aURI) return null;
-
-		var spec = aURI.spec;
-		var domainMatchResult = spec.match(/^\w+:(?:\/\/)?([^:\/]+)/);
-		return domainMatchResult ?
-				domainMatchResult[1] :
-				null ;
 	},
 
 	cancelTimers : function()
