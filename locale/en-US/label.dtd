@@ -14,7 +14,7 @@
    - The Original Code is Suspend Tab.
    -
    - The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
-   - Portions created by the Initial Developer are Copyright (C) 2012-2013
+   - Portions created by the Initial Developer are Copyright (C) 2012-2014
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s): YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -54,5 +54,6 @@
 <!ENTITY tabContextMenu.items.caption "Extra items for the context menu on tabs">
 <!ENTITY tab.suspend.label "Suspend Tab">
 <!ENTITY tab.resume.label "Resume Tab">
+<!ENTITY tab.exception.add.label "Don't suspend this site automatically">
 <!ENTITY tab.suspendTree.label "Suspend Tree">
 <!ENTITY tab.resumeTree.label "Resume Tree">

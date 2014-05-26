@@ -170,23 +170,29 @@ SuspendTab.prototype = {
 		if (!this.tabContextItem || aEvent.target != this.tabContextPopup)
 			return;
 
+		var isNoOtherTab = this.tabs.length == 1;
 		var tab = this.browser.mContextTab;
-		var item = this.tabContextItem;
-		if (this.isSuspended(tab)) {
-			item.setAttribute('label', bundle.getString('tab.resume.label'));
-			item.setAttribute('accesskey',  bundle.getString('tab.resume.accesskey'));
-		}
-		else {
-			item.setAttribute('label', bundle.getString('tab.suspend.label'));
-			item.setAttribute('accesskey',  bundle.getString('tab.suspend.accesskey'));
+
+		let (item = this.tabContextItem) {
+			if (this.isSuspended(tab)) {
+				item.setAttribute('label', bundle.getString('tab.resume.label'));
+				item.setAttribute('accesskey',  bundle.getString('tab.resume.accesskey'));
+			}
+			else {
+				item.setAttribute('label', bundle.getString('tab.suspend.label'));
+				item.setAttribute('accesskey',  bundle.getString('tab.suspend.accesskey'));
+			}
+
+			if (isNoOtherTab) {
+				item.setAttribute('disabled', true);
+			}
+			else {
+				item.removeAttribute('disabled');
+			}
 		}
 
-		var isNoOtherTab = this.tabs.length == 1;
-		if (isNoOtherTab) {
-			item.setAttribute('disabled', true);
-		}
-		else {
-			item.removeAttribute('disabled');
+		let (item = this.tabContextAddDomainExceptionItem) {
+			item.checked = this.isBlocked(tab);
 		}
 
 		let sandbox = new Cu.Sandbox(
@@ -211,6 +217,21 @@ SuspendTab.prototype = {
 	},
 
 	onCommand : function(aEvent)
+	{
+		switch (aEvent.target.id)
+		{
+			case 'context_toggleTabSuspended':
+				return this.onToggleSuspendedCommand(aEvent);
+
+			case 'context_toggleTabSuspendException':
+				return this.onToggleExceptionCommand(aEvent);
+
+			default:
+				return;
+		}
+	},
+
+	onToggleSuspendedCommand : function(aEvent)
 	{
 		var tab = this.browser.mContextTab;
 		var TST = this.browser.treeStyleTab;
@@ -274,6 +295,24 @@ SuspendTab.prototype = {
 				0 ;
 
 		return tabs[index];
+	},
+
+	onToggleExceptionCommand : function(aEvent)
+	{
+		var tab = this.browser.mContextTab;
+		var uri = tab.linkedBrowser.currentURI;
+		var domain = this._getDomainFromURI(uri);
+
+		var list = prefs.getPref(this.domain + 'autoSuspend.blockList') || '';
+		if (this.isBlocked(tab)) {
+			list = list.replace(domain, '').replace(/\s+/g, ' ').trim();
+		}
+		else {
+			list = (list + ' ' + domain).trim();
+		}
+		prefs.setPref(this.domain + 'autoSuspend.blockList', list)
+
+		delete this._blockList;
 	},
 
 	onTabSelect : function(aEvent)
@@ -347,17 +386,19 @@ SuspendTab.prototype = {
 			)
 			return false;
 
-		if (this.blockList) {
-			let uri = aTab.linkedBrowser.currentURI;
-			let domain = this._getDomainFromURI(uri);
-			if (this.blockList.some(function(aRule) {
-					var target = aRule.source.indexOf('/') < 0 ? domain : uri.spec;
-					return aRule.test(target);
-				}))
-				return false;
-		}
+		return !this.isBlocked(aTab);
+	},
+	isBlocked : function(aTab)
+	{
+		if (!this.blockList)
+			return false;
 
-		return true;
+		var uri = aTab.linkedBrowser.currentURI;
+		var domain = this._getDomainFromURI(uri);
+		return this.blockList.some(function(aRule) {
+			var target = aRule.source.indexOf('/') < 0 ? domain : uri.spec;
+			return aRule.test(target);
+		});
 	},
 	_getDomainFromURI : function (aURI) 
 	{
@@ -511,13 +552,14 @@ SuspendTab.prototype = {
 
 	initMenuItems : function()
 	{
+		this.tabContextPopup.addEventListener('popupshowing', this, false);
+
 		this.tabContextItem = this.document.createElement('menuitem');
 		this.tabContextItem.setAttribute('id', 'context_toggleTabSuspended');
 		this.tabContextItem.addEventListener('command', this, false);
 
 		var undoItem = this.document.getElementById('context_undoCloseTab');
 		this.tabContextPopup.insertBefore(this.tabContextItem, undoItem);
-		this.tabContextPopup.addEventListener('popupshowing', this, false);
 
 		this.extraMenuItems = [];
 
@@ -565,6 +607,14 @@ SuspendTab.prototype = {
 				this.tabContextPopup.insertBefore(item, undoItem);
 			}
 		}
+
+		this.tabContextAddDomainExceptionItem = this.document.createElement('menuitem');
+		this.tabContextAddDomainExceptionItem.setAttribute('id', 'context_toggleTabSuspendException');
+		this.tabContextAddDomainExceptionItem.setAttribute('label', bundle.getString('tab.exception.add.label'));
+		this.tabContextAddDomainExceptionItem.setAttribute('accesskey', bundle.getString('tab.exception.add.accesskey'));
+		this.tabContextAddDomainExceptionItem.setAttribute('type', 'checkbox');
+		this.tabContextAddDomainExceptionItem.addEventListener('command', this, false);
+		this.tabContextPopup.insertBefore(this.tabContextAddDomainExceptionItem, undoItem);
 	},
 
 	destroy : function()
@@ -599,9 +649,14 @@ SuspendTab.prototype = {
 	destroyMenuItems : function()
 	{
 		this.tabContextPopup.removeEventListener('popupshowing', this, false);
+
 		this.tabContextItem.removeEventListener('command', this, false);
 		this.tabContextItem.parentNode.removeChild(this.tabContextItem);
 		delete this.tabContextItem;
+
+		this.tabContextAddDomainExceptionItem.removeEventListener('command', this, false);
+		this.tabContextAddDomainExceptionItem.parentNode.removeChild(this.tabContextAddDomainExceptionItem);
+		delete this.tabContextAddDomainExceptionItem;
 
 		this.extraMenuItems.forEach(function(aItem) {
 			aItem.parentNode.removeChild(aItem);

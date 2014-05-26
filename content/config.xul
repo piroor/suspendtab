@@ -124,6 +124,9 @@
 			<preference id="menu.context_toggleTabSuspended"
 				name="extensions.suspendtab@piro.sakura.ne.jp.menu.context_toggleTabSuspended"
 				type="bool"/>
+			<preference id="menu.context_toggleTabSuspended"
+				name="extensions.suspendtab@piro.sakura.ne.jp.menu.context_toggleTabSuspendException"
+				type="bool"/>
 			<preference id="menu.context_suspendTree"
 				name="extensions.suspendtab@piro.sakura.ne.jp.menu.context_suspendTree"
 				type="bool"/>
@@ -135,6 +138,8 @@
 			<caption label="&tabContextMenu.items.caption;"/>
 			<checkbox label="&tab.suspend.label; / &tab.resume.label;"
 				preference="menu.context_toggleTabSuspended"/>
+			<checkbox label="&tab.exception.add.label;"
+				preference="menu.context_toggleTabSuspendException"/>
 			<separator/>
 			<checkbox label="&tab.suspendTree.label;"
 				preference="menu.context_suspendTree"/>
