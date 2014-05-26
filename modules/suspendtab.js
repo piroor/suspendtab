@@ -305,7 +305,7 @@ SuspendTab.prototype = {
 		if (this.isBlocked(tab)) {
 			list = list.split(/\s+/).filter(function(aRule) {
 				aRule = this._generateRegExpFromRule(aRule);
-				return this.testBlockRule(aRule, uri);
+				return !this.testBlockRule(aRule, uri);
 			}, this).join(' ');
 		}
 		else {
