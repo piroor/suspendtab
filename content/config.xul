@@ -124,7 +124,7 @@
 			<preference id="menu.context_toggleTabSuspended"
 				name="extensions.suspendtab@piro.sakura.ne.jp.menu.context_toggleTabSuspended"
 				type="bool"/>
-			<preference id="menu.context_toggleTabSuspended"
+			<preference id="menu.context_toggleTabSuspendException"
 				name="extensions.suspendtab@piro.sakura.ne.jp.menu.context_toggleTabSuspendException"
 				type="bool"/>
 			<preference id="menu.context_suspendTree"
