@@ -170,7 +170,7 @@ SuspendTab.prototype = {
 		if (!this.tabContextItem || aEvent.target != this.tabContextPopup)
 			return;
 
-		var isNoOtherTab = this.tabs.length == 1;
+		var isLastTab = this.tabs.length == 1;
 		var tab = this.browser.mContextTab;
 
 		let (item = this.tabContextItem) {
@@ -183,17 +183,14 @@ SuspendTab.prototype = {
 				item.setAttribute('accesskey',  bundle.getString('tab.suspend.accesskey'));
 			}
 
-			if (isNoOtherTab) {
-				item.setAttribute('disabled', true);
-			}
-			else {
-				item.removeAttribute('disabled');
-			}
+			item.disabled = isLastTab;
+			item.hidden = !prefs.getPref(this.domain + 'menu.' + item.id);
 		}
 
 		let (item = this.tabContextAddDomainExceptionItem) {
 			item.checked = this.isBlocked(tab);
 			item.disabled = !this.isBlockable(tab);
+			item.hidden = !prefs.getPref(this.domain + 'menu.' + item.id);
 		}
 
 		let sandbox = new Cu.Sandbox(
@@ -203,17 +200,11 @@ SuspendTab.prototype = {
 		this.extraMenuItems.forEach(function(aItem) {
 			var availableChecker = aItem.getAttribute(this.MENUITEM_AVAILABLE);
 			var available = (availableChecker ? Cu.evalInSandbox('(function() { ' + availableChecker + '})()', sandbox) : true);
-			if (available && prefs.getPref(this.domain + 'menu.' + aItem.id))
-				aItem.removeAttribute('hidden');
-			else
-				aItem.setAttribute('hidden', true);
+			aItem.hidden = !available || !prefs.getPref(this.domain + 'menu.' + aItem.id);
 
 			var enabledChecker = aItem.getAttribute(this.MENUITEM_ENABLED);
 			var enabled = (enabledChecker ? Cu.evalInSandbox('(function() { ' + enabledChecker + '})()', sandbox) : true);
-			if (enabled && !isNoOtherTab)
-				aItem.removeAttribute('disabled');
-			else
-				aItem.setAttribute('disabled', true);
+			aItem.disabled = !enabled || isLastTab;
 		}, this);
 	},
 
