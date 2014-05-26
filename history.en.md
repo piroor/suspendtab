@@ -3,6 +3,7 @@
  - master/HEAD
    * Add "Don't suspend this site automatically" to the tab context menu.
    * Detect host name of web pages more correctly.
+   * Visibility options for menu items work correctly.
  - 0.2.2014050201
    * Works on Firefox 29 and Nightly 32.0a1.
    * Drop support for Firefox 25, 26, 27 and 28.
