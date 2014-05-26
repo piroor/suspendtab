@@ -193,6 +193,7 @@ SuspendTab.prototype = {
 
 		let (item = this.tabContextAddDomainExceptionItem) {
 			item.checked = this.isBlocked(tab);
+			item.disabled = !this.isBlockable(tab);
 		}
 
 		let sandbox = new Cu.Sandbox(
@@ -385,7 +386,17 @@ SuspendTab.prototype = {
 			)
 			return false;
 
-		return !this.isBlocked(aTab);
+		return !this.isBlockable(aTab) || !this.isBlocked(aTab);
+	},
+	isBlockable : function(aTab)
+	{
+		var uri = aTab.linkedBrowser.currentURI;
+		try {
+			return Boolean(uri.host);
+		}
+		catch(e) {
+			return false;
+		}
 	},
 	isBlocked : function(aTab)
 	{
