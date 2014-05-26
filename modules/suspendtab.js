@@ -101,24 +101,28 @@ SuspendTab.prototype = {
 
 			if (this._blockList) {
 				this._blockList = this._blockList.split(/\s+/).map(function(aItem) {
-					try {
-						var regexp = aItem.replace(/\./g, '\\.')
-										.replace(/\?/g, '.')
-										.replace(/\*/g, '.*');
-						regexp = aItem.indexOf('/') < 0 ?
-									'\\b' + regexp + '$' : '^' + regexp;
-						return regexp && new RegExp(regexp, 'i');
-					}
-					catch(error) {
-						Cu.reportError(new Error('suspendtab: invalid block rule "' + aItem + '"'));
-						return null;
-					}
-				}).filter(function(aRule) {
-					return !!aRule;
+					return this._generateRegExpFromRule(aItem);
+				}, this).filter(function(aRule) {
+					return Boolean(aRule);
 				});
 			}
 		}
 		return this._blockList;
+	},
+	_generateRegExpFromRule : function(aRule)
+	{
+		try {
+			var regexp = aRule.replace(/\./g, '\\.')
+							.replace(/\?/g, '.')
+							.replace(/\*/g, '.*');
+			regexp = aRule.indexOf('/') < 0 ?
+						regexp : '^' + regexp;
+			return regexp && new RegExp(regexp, 'i');
+		}
+		catch(error) {
+			Cu.reportError(new Error('suspendtab: invalid block rule "' + aRule + '"'));
+			return null;
+		}
 	},
 
 	handleEvent : function(aEvent)
@@ -188,7 +192,10 @@ SuspendTab.prototype = {
 		}
 
 		let (item = this.tabContextAddDomainExceptionItem) {
-			item.checked = this.isBlocked(tab);
+			if (this.isBlocked(tab))
+				item.setAttribute('checked', true);
+			else
+				item.removeAttribute('checked');
 			item.disabled = !this.isBlockable(tab);
 			item.hidden = !prefs.getPref(this.domain + 'menu.' + item.id);
 		}
@@ -292,18 +299,19 @@ SuspendTab.prototype = {
 	onToggleExceptionCommand : function(aEvent)
 	{
 		var tab = this.browser.mContextTab;
-		var domain = tab.linkedBrowser.currentURI.host;
+		var uri = tab.linkedBrowser.currentURI;
 
 		var list = prefs.getPref(this.domain + 'autoSuspend.blockList') || '';
 		if (this.isBlocked(tab)) {
-			list = list.replace(domain, '').replace(/\s+/g, ' ').trim();
+			list = list.split(/\s+/).filter(function(aRule) {
+				aRule = this._generateRegExpFromRule(aRule);
+				return this.testBlockRule(aRule, uri);
+			}, this).join(' ');
 		}
 		else {
-			list = (list + ' ' + domain).trim();
+			list = (list + ' ' + uri.host).trim();
 		}
-		prefs.setPref(this.domain + 'autoSuspend.blockList', list)
-
-		delete this._blockList;
+		prefs.setPref(this.domain + 'autoSuspend.blockList', list);
 	},
 
 	onTabSelect : function(aEvent)
@@ -394,11 +402,24 @@ SuspendTab.prototype = {
 		if (!this.blockList)
 			return false;
 
-		var domain = aTab.linkedBrowser.currentURI.host;
+		var uri = aTab.linkedBrowser.currentURI;
 		return this.blockList.some(function(aRule) {
-			var target = aRule.source.indexOf('/') < 0 ? domain : uri.spec;
-			return aRule.test(target);
-		});
+			return this.testBlockRule(aRule, uri);
+		}, this);
+	},
+	testBlockRule : function(aRule, aURI)
+	{
+		if (aRule.source.indexOf('/') < 0) {
+			try {
+				return aRule.test(aURI.host);
+			}
+			catch(e) {
+				return false;
+			}
+		}
+		else {
+			return aRule.test(aURI.spec);
+		}
 	},
 
 	cancelTimers : function()
