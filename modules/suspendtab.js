@@ -272,7 +272,7 @@ SuspendTab.prototype = inherit(require('const'), {
 
 		// skip suspending tabs
 		tabs = tabs.filter(function(aOtherTab) {
-			return !this.internal.getTabState(aOtherTab);
+			return aOtherTab == aTab || !this.internal.getTabState(aOtherTab);
 		}, this);
 		if (!tabs.length)
 			return null;
