@@ -43,6 +43,8 @@ var timer = require('lib/jstimer');
 var SS = Cc['@mozilla.org/browser/sessionstore;1']
 			.getService(Ci.nsISessionStore);
 
+Cu.import('resource://gre/modules/Services.jsm');
+
 var internalSS = (function() {;
 	var ns = {
 			atob : atob,
@@ -156,6 +158,7 @@ SuspendTabInternal.prototype = {
 			dump(' suspend '+aTab._tPos+'\n');
 
 		var label = aTab.label;
+		var wasBusy = aTab.getAttribute('busy') == 'true';
 
 		// First, get the current tab state via the genuine step.
 		// We store it to the session data permanently.
@@ -186,7 +189,11 @@ SuspendTabInternal.prototype = {
 		// OK, let's destroy the current session history!
 		var browser = aTab.linkedBrowser;
 		var SHistory = browser.sessionHistory;
+
 		var uri = browser.currentURI.clone();
+		if (uri.spec == 'about:blank' && state.userTypedValue)
+			uri = Services.io.newURI(state.userTypedValue, null, null);
+
 		var self = this;
 		browser.addEventListener('load', function() {
 			browser.removeEventListener('load', arguments.callee, true);
@@ -201,6 +208,9 @@ SuspendTabInternal.prototype = {
 			timer.setTimeout(function() {
 				aTab.setAttribute('image', state.attributes.image || state.image);
 			}, 0);
+
+			if (wasBusy)
+				label = uri.spec;
 
 			browser.docShell.setCurrentURI(uri);
 			browser.contentDocument.title = label;

@@ -76,6 +76,10 @@ SuspendTab.prototype = {
 	{
 		return prefs.getPref(this.domain + 'autoSuspend.resetOnReload');
 	},
+	get autoSuspendNewBackgroundTab()
+	{
+		return prefs.getPref(this.domain + 'autoSuspend.newBackgroundTab');
+	},
 
 	get document()
 	{
@@ -134,6 +138,9 @@ SuspendTab.prototype = {
 
 			case 'command':
 				return this.onCommand(aEvent);
+
+			case 'TabOpen':
+				return this.onTabOpen(aEvent);
 
 			case 'TabSelect':
 				return this.onTabSelect(aEvent);
@@ -312,6 +319,19 @@ SuspendTab.prototype = {
 			list = (list + ' ' + uri.host).trim();
 		}
 		prefs.setPref(this.domain + 'autoSuspend.blockList', list);
+	},
+
+	onTabOpen : function(aEvent)
+	{
+		if (!this.autoSuspendNewBackgroundTab)
+			return;
+
+		var tab = aEvent.originalTarget;
+		timer.setTimeout(function(aSelf) {
+			if (!tab.parentNode || tab.selected)
+				return;
+			aSelf.suspend(tab);
+		}, 0, this);
 	},
 
 	onTabSelect : function(aEvent)
@@ -540,6 +560,7 @@ SuspendTab.prototype = {
 		this.internal = new SuspendTabInternal(aWindow);
 
 		this.window.addEventListener('unload', this, false);
+		this.window.addEventListener('TabOpen', this, false);
 		this.window.addEventListener('TabSelect', this, true);
 		this.window.addEventListener('SSTabRestoring', this, true);
 		this.window.addEventListener('SSTabRestored', this, true);
@@ -645,6 +666,7 @@ SuspendTab.prototype = {
 			delete this.observer;
 
 			this.window.removeEventListener('unload', this, false);
+			this.window.removeEventListener('TabOpen', this, false);
 			this.window.removeEventListener('TabSelect', this, true);
 			this.window.removeEventListener('SSTabRestoring', this, true);
 			this.window.removeEventListener('SSTabRestored', this, true);
