@@ -49,6 +49,7 @@
 <!ENTITY autoSuspend.blockList.description1 "You can specify multiple domains separated by line breaks.">
 <!ENTITY autoSuspend.blockList.description2 "Available wildcatds: ?=any one letter, *=0 or more any letters">
 <!ENTITY autoSuspend.blockList.description3 "ex: example.com http://example.jp/*">
+<!ENTITY autoSuspend.newBackgroundTab "Suspend new tabs automatically">
 
 <!ENTITY tab.menu "Menu">
 <!ENTITY tabContextMenu.items.caption "Extra items for the context menu on tabs">
