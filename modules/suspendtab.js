@@ -494,8 +494,9 @@ SuspendTab.prototype = {
 
 	updateTooltip : function(aTab)
 	{
-		if (!this.debug || !this.isSuspended(aTab)) {
-			if (aTab.getAttribute('tooltiptext') == aTab.getAttribute('suspendtab-tooltiptext'))
+		if (!this.debug || this.isSuspended(aTab) || aTab.selected) {
+			if (aTab.getAttribute('tooltiptext') &&
+				aTab.getAttribute('tooltiptext') == aTab.getAttribute('suspendtab-tooltiptext'))
 				aTab.setAttribute('tooltiptext', aTab.visibleLabel || aTab.label);
 			aTab.removeAttribute('suspendtab-tooltiptext');
 			return;
