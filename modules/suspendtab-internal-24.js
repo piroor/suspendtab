@@ -97,8 +97,7 @@ function SuspendTabInternal(aWindow)
 {
 	this.init(aWindow);
 }
-SuspendTabInternal.prototype = {
-	__proto__ : require('const'),
+SuspendTabInternal.prototype = inherit(require('const'), {
 
 	get debug()
 	{
@@ -426,7 +425,7 @@ SuspendTabInternal.prototype = {
 				this.resume(aTab);
 		}, this);
 	}
-};
+});
 SuspendTabInternal.isAvailable = isInternalAPIsAvailable;
 
 SuspendTabInternal.instances = [];

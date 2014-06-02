@@ -56,9 +56,7 @@ function SuspendTab(aWindow)
 {
 	this.init(aWindow);
 }
-SuspendTab.prototype = {
-	__proto__ : require('const'),
-
+SuspendTab.prototype = inherit(require('const'), {
 	get debug()
 	{
 		return prefs.getPref(this.domain + 'debug');
@@ -744,7 +742,7 @@ SuspendTab.prototype = {
 	{
 		this.internal.resume(aTabs);
 	}
-};
+});
 
 SuspendTab.instances = [];
 
