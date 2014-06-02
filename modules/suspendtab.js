@@ -480,9 +480,10 @@ SuspendTab.prototype = {
 		}
 
 		var now = aTab.__suspendtab__timestamp || Date.now();
-		var date = (new Date(now + this.autoSuspendTimeout));
+		var date = String(new Date(now + this.autoSuspendTimeout));
 		var label = aTab.visibleLabel || aTab.label;
-		aTab.setAttribute('tooltiptext', label +' (to be suspended at '+date+')');
+		label = bundle.getFormattedString('toBeSuspended.tooltip', [label, date]);
+		aTab.setAttribute('tooltiptext', label);
 		dump('  => will be suspended at '+date+'\n');
 	},
 
