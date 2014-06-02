@@ -475,7 +475,9 @@ SuspendTab.prototype = {
 	updateTooltip : function(aTab)
 	{
 		if (!this.debug || !this.isSuspended(aTab)) {
-			aTab.setAttribute('tooltiptext', aTab.visibleLabel || aTab.label);
+			if (aTab.getAttribute('tooltiptext') == aTab.getAttribute('suspendtab-tooltiptext'))
+				aTab.setAttribute('tooltiptext', aTab.visibleLabel || aTab.label);
+			aTab.removeAttribute('suspendtab-tooltiptext');
 			return;
 		}
 
@@ -484,6 +486,7 @@ SuspendTab.prototype = {
 		var label = aTab.visibleLabel || aTab.label;
 		label = bundle.getFormattedString('toBeSuspended.tooltip', [label, date]);
 		aTab.setAttribute('tooltiptext', label);
+		aTab.setAttribute('suspendtab-tooltiptext', label);
 		dump('  => will be suspended at '+date+'\n');
 	},
 
