@@ -51,6 +51,14 @@
 <!ENTITY autoSuspend.blockList.description3 "ex: example.com http://example.jp/*">
 <!ENTITY autoSuspend.newBackgroundTab "Don't load new background tabs by default">
 
+<!ENTITY tab.focus "Focus">
+<!ENTITY nextFocus.caption  "Next focused tab when the current tab is suspended">
+<!ENTITY nextFocus.auto     "Auto">
+<!ENTITY nextFocus.first    "First loaded tab">
+<!ENTITY nextFocus.previous "Previous loaded tab">
+<!ENTITY nextFocus.next     "Next loaded tab">
+<!ENTITY nextFocus.last     "Last loaded tab">
+
 <!ENTITY tab.menu "Menu">
 <!ENTITY tabContextMenu.items.caption "Extra items for the context menu on tabs">
 <!ENTITY tab.suspend.label "Suspend Tab">

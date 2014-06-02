@@ -123,6 +123,27 @@
 			preference="autoSuspend.newBackgroundTab"/>
 	</prefpane>
 
+	<prefpane id="prefpane-focus"
+		label="&tab.focus;">
+		<preferences>
+			<preference id="autoSuspend.nextFocus"
+				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.nextFocus"
+				type="int"/>
+		</preferences>
+		<groupbox orient="vertical">
+			<caption label="&nextFocus.caption;"/>
+			<radiogroup orient="vertical"
+				preference="autoSuspend.nextFocus">
+				<radio value="-1" label="&nextFocus.auto;"/>
+				<separator/>
+				<radio value="2" label="&nextFocus.first;"/>
+				<radio value="0" label="&nextFocus.previous;"/>
+				<radio value="1" label="&nextFocus.next;"/>
+				<radio value="3" label="&nextFocus.last;"/>
+			</radiogroup>
+		</groupbox>
+	</prefpane>
+
 	<prefpane id="prefpane-menu"
 		label="&tab.menu;">
 		<preferences>

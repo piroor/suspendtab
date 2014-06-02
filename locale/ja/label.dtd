@@ -51,6 +51,14 @@
 <!ENTITY autoSuspend.blockList.description3 "例：example.com http://example.jp/*">
 <!ENTITY autoSuspend.newBackgroundTab "新しくバックグラウンドで開いたタブは自動的には読み込まない">
 
+<!ENTITY tab.focus "フォーカス">
+<!ENTITY nextFocus.caption  "現在のタブをサスペンドした場合に次に選択するタブ">
+<!ENTITY nextFocus.auto     "自動的に決定">
+<!ENTITY nextFocus.first    "最初のサスペンドされていないタブ">
+<!ENTITY nextFocus.previous "前のサスペンドされていないタブ">
+<!ENTITY nextFocus.next     "次のサスペンドされていないタブ">
+<!ENTITY nextFocus.last     "最後のサスペンドされていないタブ">
+
 <!ENTITY tab.menu "メニュー">
 <!ENTITY tabContextMenu.items.caption "タブのコンテキストメニューに以下の項目を追加する">
 <!ENTITY tab.suspend.label "このタブをサスペンドする">
