@@ -49,7 +49,7 @@
 <!ENTITY autoSuspend.blockList.description1 "改行区切りで複数のドメインまたはURIを指定できます。">
 <!ENTITY autoSuspend.blockList.description2 "利用可能なワイルドカード： ?=任意の1文字, *=0個以上の任意の文字">
 <!ENTITY autoSuspend.blockList.description3 "例：example.com http://example.jp/*">
-<!ENTITY autoSuspend.newBackgroundTab "新しく開いたタブを最初からサスペンドしておく">
+<!ENTITY autoSuspend.newBackgroundTab "新しくバックグラウンドで開いたタブは自動的には読み込まない">
 
 <!ENTITY tab.menu "メニュー">
 <!ENTITY tabContextMenu.items.caption "タブのコンテキストメニューに以下の項目を追加する">
