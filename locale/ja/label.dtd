@@ -58,6 +58,7 @@
 <!ENTITY nextFocus.previous "前のサスペンドされていないタブ">
 <!ENTITY nextFocus.next     "次のサスペンドされていないタブ">
 <!ENTITY nextFocus.last     "最後のサスペンドされていないタブ">
+<!ENTITY nextFocus.previouslyFocused "そのタブの前に見ていたサスペンドされていないタブ">
 
 <!ENTITY tab.menu "メニュー">
 <!ENTITY tabContextMenu.items.caption "タブのコンテキストメニューに以下の項目を追加する">

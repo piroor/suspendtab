@@ -58,6 +58,7 @@
 <!ENTITY nextFocus.previous "Previous loaded tab">
 <!ENTITY nextFocus.next     "Next loaded tab">
 <!ENTITY nextFocus.last     "Last loaded tab">
+<!ENTITY nextFocus.previouslyFocused "Previously selected loaded tab">
 
 <!ENTITY tab.menu "Menu">
 <!ENTITY tabContextMenu.items.caption "Extra items for the context menu on tabs">

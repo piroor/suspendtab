@@ -140,6 +140,8 @@
 				<radio value="0" label="&nextFocus.previous;"/>
 				<radio value="1" label="&nextFocus.next;"/>
 				<radio value="3" label="&nextFocus.last;"/>
+				<separator/>
+				<radio value="4" label="&nextFocus.previouslyFocused;"/>
 			</radiogroup>
 		</groupbox>
 	</prefpane>

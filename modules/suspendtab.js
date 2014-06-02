@@ -301,6 +301,13 @@ SuspendTab.prototype = inherit(require('const'), {
 						0 ;
 				return tabs[index];
 
+			case this.NEXT_FOCUS_PREVIOUSLY_FOCUSED:
+				tabs.sort(function(aA, aB) {
+					return (aA.__suspendtab__lastFocused || 0) - (aB.__suspendtab__lastFocused || 0);
+				});
+				index = Array.slice(tabs).indexOf(aTab);
+				if (index == 0)
+					return tabs[1];
 			case this.NEXT_FOCUS_PRECEDING:
 				index = index > 1 ?
 						index - 1 :
@@ -354,6 +361,7 @@ SuspendTab.prototype = inherit(require('const'), {
 		this.cancelTimer(tab);
 		this.resume(tab);
 		this.setTimers();
+		tab.__suspendtab__lastFocused = Date.now();
 	},
 
 	/**
