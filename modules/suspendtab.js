@@ -268,6 +268,33 @@ SuspendTab.prototype = {
 	},
 	getNextFocusedTab : function(aTab)
 	{
+		var tabs = this.browser.visibleTabs;
+		if (tabs.length == 1 && tabs[0] == aTab)
+			tabs = this.tabs;
+
+		// skip suspending tabs
+		tabs = tabs.filter(function(aOtherTab) {
+			return !this.internal.getTabState(aOtherTab);
+		}, this);
+		if (!tabs.length)
+			return null;
+
+		var index = Array.slice(tabs).indexOf(aTab);
+		switch (prefs.getPref(this.domain + 'autoSuspend.nextFocus')) {
+			default:
+			case this.NEXT_FOCUS_FOLLOWING:
+				index = index > -1 && index + 1 <= tabs.length - 1 ?
+						index + 1 :
+						0 ;
+				break;
+
+			case this.NEXT_FOCUS_PRECEDING:
+				index = index > 1 ?
+						index - 1 :
+						tabs.length - 1 ;
+				break;
+		}
+
 		var TST = this.browser.treeStyleTab;
 		if (TST) {
 			let nextFocused = !TST.isSubtreeCollapsed(aTab) && TST.getFirstChildTab(aTab);
@@ -283,22 +310,6 @@ SuspendTab.prototype = {
 				}, this);
 			return tabs.length ? tabs[0] : null ;
 		}
-
-		var tabs = this.browser.visibleTabs;
-		if (tabs.length == 1 && tabs[0] == aTab)
-			tabs = this.tabs;
-
-		// skip suspending tabs
-		tabs = tabs.filter(function(aOtherTab) {
-			return !this.internal.getTabState(aOtherTab);
-		}, this);
-		if (!tabs.length)
-			return null;
-
-		var index = Array.slice(tabs).indexOf(aTab);
-		index = index > -1 && index + 1 <= tabs.length - 1 ?
-				index + 1 :
-				0 ;
 
 		return tabs[index];
 	},
