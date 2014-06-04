@@ -379,11 +379,6 @@ SuspendTab.prototype = inherit(require('const'), {
 	onTabRestored : function(aEvent)
 	{
 		var tab = aEvent.originalTarget;
-
-		var options = this.internal.getTabOptions(tab);
-		if (options && options.newTabNotLoadedYet)
-			return false;
-
 		return this.resume(tab);
 	},
 
@@ -417,10 +412,13 @@ SuspendTab.prototype = inherit(require('const'), {
 				// The blank page is loaded when it is suspended too.
 				// We have to handle only "reloading of already suspended" tab,
 				// in other words, we must ignore "just now suspended" tab.
-				tab.hasAttribute('pending') &&
-				(!options || !options.newTabNotLoadedYet)
-				)
-				this.resume(tab);
+				tab.hasAttribute('pending')
+				) {
+				if (options && options.label)
+					tab.visibleLabel = tab.label = options.label;
+				if (!options || !options.newTabNotLoadedYet)
+					this.resume(tab);
+			}
 		}
 		else {
 			if (this.autoSuspendResetOnReload && !tab.selected)

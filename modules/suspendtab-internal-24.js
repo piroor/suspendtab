@@ -144,6 +144,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 	suspend : function(aTab, aOptions)
 	{
+		aOptions = aOptions || {};
 		if (this.isSuspended(aTab))
 			return true;
 
@@ -163,6 +164,15 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		// We store it to the session data permanently.
 		var state = SS.getTabState(aTab);
 		state = JSON.parse(state);
+
+		var browser = aTab.linkedBrowser;
+		var uri = browser.currentURI.clone();
+		if (uri.spec == 'about:blank' && state.userTypedValue)
+			uri = Services.io.newURI(state.userTypedValue, null, null);
+
+		if (wasBusy)
+			aOptions.label = uri.spec;
+
 		// We only need minimum data required to restore the session history,
 		// so drop needless information.
 		var partialState = {
@@ -172,8 +182,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 			pageStyle : state.pageStyle || null
 		};
 		SS.setTabValue(aTab, this.STATE, JSON.stringify(partialState));
-		if (aOptions)
-			SS.setTabValue(aTab, this.OPTIONS, JSON.stringify(aOptions));
+		SS.setTabValue(aTab, this.OPTIONS, JSON.stringify(aOptions));
 
 		// If possible, we should use full tab state including sensitive data.
 		// Store it to the volatile storage instaed of the session data, for privacy.
@@ -188,12 +197,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		});
 
 		// OK, let's destroy the current session history!
-		var browser = aTab.linkedBrowser;
 		var SHistory = browser.sessionHistory;
-
-		var uri = browser.currentURI.clone();
-		if (uri.spec == 'about:blank' && state.userTypedValue)
-			uri = Services.io.newURI(state.userTypedValue, null, null);
 
 		var self = this;
 		browser.addEventListener('load', function() {
