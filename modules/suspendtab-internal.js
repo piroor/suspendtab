@@ -164,6 +164,9 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		browser.addEventListener('load', function onLoad() {
 			browser.removeEventListener('load', onLoad, true);
 
+			if (wasBusy)
+				label = uri.spec;
+
 			aTab.setAttribute('label', label);
 			aTab.setAttribute('visibleLabel', label);
 			if (self.debug)
@@ -174,9 +177,6 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 			timer.setTimeout(function() {
 				aTab.setAttribute('image', state.attributes.image || state.image);
 			}, 0);
-
-			if (wasBusy)
-				label = uri.spec;
 
 			browser.docShell.setCurrentURI(uri);
 			browser.contentDocument.title = label;
