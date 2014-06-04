@@ -65,5 +65,6 @@
 <!ENTITY tab.suspend.label "Suspend Tab">
 <!ENTITY tab.resume.label "Resume Tab">
 <!ENTITY tab.exception.add.label "Don't suspend this site automatically">
+<!ENTITY tab.suspendOthers.label "Suspend Other Tabs">
 <!ENTITY tab.suspendTree.label "Suspend Tree">
 <!ENTITY tab.resumeTree.label "Resume Tree">

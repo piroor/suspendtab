@@ -48,6 +48,7 @@ prefs.setDefaultPref(domain+'autoSuspend.nextFocus', SuspendTabConst.NEXT_FOCUS_
 prefs.setDefaultPref(domain+'saferSuspend', true);
 prefs.setDefaultPref(domain+'menu.context_toggleTabSuspended', true);
 prefs.setDefaultPref(domain+'menu.context_toggleTabSuspendException', true);
+prefs.setDefaultPref(domain+'menu.context_suspendOthers', true);
 prefs.setDefaultPref(domain+'menu.context_suspendTree', true);
 prefs.setDefaultPref(domain+'menu.context_resumeTree', true);
 prefs.setDefaultPref(domain+'debug', false);

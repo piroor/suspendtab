@@ -230,6 +230,9 @@ SuspendTab.prototype = inherit(require('const'), {
 			case 'context_toggleTabSuspendException':
 				return this.onToggleExceptionCommand(aEvent);
 
+			case 'context_suspendOthers':
+				return this.onSuspendOthersCommand(aEvent);
+
 			default:
 				return;
 		}
@@ -338,6 +341,15 @@ SuspendTab.prototype = inherit(require('const'), {
 			list = (list + ' ' + uri.host).trim();
 		}
 		prefs.setPref(this.domain + 'autoSuspend.blockList', list);
+	},
+
+	onSuspendOthersCommand : function(aEvent)
+	{
+		var tab = this.browser.mContextTab;
+		Array.forEach(this.tabs, function(aTab) {
+			if (aTab != tab)
+				this.suspend(aTab);
+		}, this);
 	},
 
 	onTabOpen : function(aEvent)
@@ -665,6 +677,11 @@ SuspendTab.prototype = inherit(require('const'), {
 			}
 		}
 
+		this.tabContextSuspendOthersItem = this.document.createElement('menuitem');
+		this.tabContextSuspendOthersItem.setAttribute('id', 'context_suspendOthers');
+		this.tabContextSuspendOthersItem.addEventListener('command', this, false);
+		this.tabContextPopup.insertBefore(this.tabContextSuspendOthersItem, undoItem);
+
 		this.tabContextAddDomainExceptionItem = this.document.createElement('menuitem');
 		this.tabContextAddDomainExceptionItem.setAttribute('id', 'context_toggleTabSuspendException');
 		this.tabContextAddDomainExceptionItem.setAttribute('label', bundle.getString('tab.exception.add.label'));
@@ -711,6 +728,10 @@ SuspendTab.prototype = inherit(require('const'), {
 		this.tabContextItem.removeEventListener('command', this, false);
 		this.tabContextItem.parentNode.removeChild(this.tabContextItem);
 		delete this.tabContextItem;
+
+		this.tabContextSuspendOthersItem.removeEventListener('command', this, false);
+		this.tabContextSuspendOthersItem.parentNode.removeChild(this.tabContextSuspendOthersItem);
+		delete this.tabContextSuspendOthersItem;
 
 		this.tabContextAddDomainExceptionItem.removeEventListener('command', this, false);
 		this.tabContextAddDomainExceptionItem.parentNode.removeChild(this.tabContextAddDomainExceptionItem);

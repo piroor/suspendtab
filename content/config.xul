@@ -155,6 +155,9 @@
 			<preference id="menu.context_toggleTabSuspendException"
 				name="extensions.suspendtab@piro.sakura.ne.jp.menu.context_toggleTabSuspendException"
 				type="bool"/>
+			<preference id="menu.context_suspendOthers"
+				name="extensions.suspendtab@piro.sakura.ne.jp.menu.context_suspendOthers"
+				type="bool"/>
 			<preference id="menu.context_suspendTree"
 				name="extensions.suspendtab@piro.sakura.ne.jp.menu.context_suspendTree"
 				type="bool"/>
@@ -168,6 +171,8 @@
 				preference="menu.context_toggleTabSuspended"/>
 			<checkbox label="&tab.exception.add.label;"
 				preference="menu.context_toggleTabSuspendException"/>
+			<checkbox label="&tab.suspendOthers.label;"
+				preference="menu.context_suspendOthers"/>
 			<separator/>
 			<checkbox label="&tab.suspendTree.label;"
 				preference="menu.context_suspendTree"/>

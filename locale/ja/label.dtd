@@ -65,5 +65,6 @@
 <!ENTITY tab.suspend.label "このタブをサスペンドする">
 <!ENTITY tab.resume.label "このタブを復帰させる">
 <!ENTITY tab.exception.add.label "このサイトは自動的にサスペンドしない">
+<!ENTITY tab.suspendOthers.label "他のタブをすべてサスペンドする">
 <!ENTITY tab.suspendTree.label "このツリーをサスペンドする">
 <!ENTITY tab.resumeTree.label "このツリーを復帰させる">
