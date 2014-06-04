@@ -679,6 +679,8 @@ SuspendTab.prototype = inherit(require('const'), {
 
 		this.tabContextSuspendOthersItem = this.document.createElement('menuitem');
 		this.tabContextSuspendOthersItem.setAttribute('id', 'context_suspendOthers');
+		this.tabContextSuspendOthersItem.setAttribute('label', bundle.getString('tab.suspendOthers.label'));
+		this.tabContextSuspendOthersItem.setAttribute('accesskey', bundle.getString('tab.suspendOthers.accesskey'));
 		this.tabContextSuspendOthersItem.addEventListener('command', this, false);
 		this.tabContextPopup.insertBefore(this.tabContextSuspendOthersItem, undoItem);
 
