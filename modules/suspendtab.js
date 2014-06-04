@@ -411,12 +411,14 @@ SuspendTab.prototype = inherit(require('const'), {
 			return;
 
 		if (this.isSuspended(tab)) {
+			let options = this.internal.getTabOptions(tab);
 			if (
 				possiblySuspended &&
 				// The blank page is loaded when it is suspended too.
 				// We have to handle only "reloading of already suspended" tab,
 				// in other words, we must ignore "just now suspended" tab.
-				tab.hasAttribute('pending')
+				tab.hasAttribute('pending') &&
+				(!options || !options.newTabNotLoadedYet)
 				)
 				this.resume(tab);
 		}
