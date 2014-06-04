@@ -37,6 +37,7 @@ var exports = {
 	domain : 'extensions.suspendtab@piro.sakura.ne.jp.',
 
 	STATE : 'suspendtab-state',
+	OPTIONS : 'suspendtab-options',
 	READY : 'suspendtab-ready-to-resume',
 	INDEX : 'suspendtab-current-index',
 	SUSPENDED : 'suspendtab-suspended',

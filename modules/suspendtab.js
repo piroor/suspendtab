@@ -147,7 +147,7 @@ SuspendTab.prototype = inherit(require('const'), {
 				return this.cancelTimer(aEvent.originalTarget);
 
 			case 'SSTabRestored':
-				return this.resume(aEvent.originalTarget);
+				return this.onTabRestored(aEvent);
 
 			case 'DOMTitleChanged':
 			case 'load':
@@ -361,7 +361,7 @@ SuspendTab.prototype = inherit(require('const'), {
 		timer.setTimeout(function(aSelf) {
 			if (!tab.parentNode || tab.selected)
 				return;
-			aSelf.suspend(tab);
+			aSelf.suspend(tab, { newTabNotLoadedYet : true });
 		}, 0, this);
 	},
 
@@ -374,6 +374,17 @@ SuspendTab.prototype = inherit(require('const'), {
 		this.resume(tab);
 		this.setTimers();
 		tab.__suspendtab__lastFocused = Date.now();
+	},
+
+	onTabRestored : function(aEvent)
+	{
+		var tab = aEvent.originalTarget;
+
+		var options = this.internal.getTabOptions(tab);
+		if (options && options.newTabNotLoadedYet)
+			return false;
+
+		return this.resume(tab);
 	},
 
 	/**
@@ -751,12 +762,12 @@ SuspendTab.prototype = inherit(require('const'), {
 		return this.internal.isSuspended(aTab);
 	},
 
-	suspend : function(aTab)
+	suspend : function(aTab, aOptions)
 	{
 		if (this.isSuspended(aTab))
 			return true;
 
-		if (!this.internal.suspend(aTab))
+		if (!this.internal.suspend(aTab, aOptions))
 			return false;
 
 		if (aTab.selected) {

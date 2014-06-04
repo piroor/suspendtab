@@ -120,7 +120,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		return browser.__SS_restoreState == 1;
 	},
 
-	suspend : function(aTab)
+	suspend : function(aTab, aOptions)
 	{
 		if (this.isSuspended(aTab))
 			return true;
@@ -150,6 +150,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 			pageStyle : state.pageStyle || null
 		};
 		SS.setTabValue(aTab, this.STATE, JSON.stringify(partialState));
+		if (aOptions)
+			SS.setTabValue(aTab, this.OPTIONS, JSON.stringify(aOptions));
 
 		var label = aTab.label;
 		var SHistory = browser.sessionHistory;
@@ -238,6 +240,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		}
 
 		var state = this.getTabState(aTab, true);
+		var options = this.getTabOptions(aTab, true);
 		if (!state)
 			return true;
 
@@ -265,6 +268,18 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 			SS.setTabValue(aTab, this.STATE, '');
 
 		return fullStates.get(aTab) || JSON.parse(state);
+	},
+
+	getTabOptions : function(aTab, aClear)
+	{
+		var options = SS.getTabValue(aTab, this.OPTIONS);
+		if (!options)
+			return {};
+
+		if (aClear)
+			SS.setTabValue(aTab, this.OPTIONS, '');
+
+		return JSON.parse(options);
 	},
 
 	// This restores history entries, but they don't eat the RAM
