@@ -11,7 +11,7 @@
    var interval = namespace.setInterval(callback, 1000, 'OK');
    namespace.clearInterval(interval);
 
- license: The MIT License, Copyright (c) 2010-2013 YUKI "Piro" Hiroshi
+ license: The MIT License, Copyright (c) 2010-2014 YUKI "Piro" Hiroshi
  original:
    http://github.com/piroor/fxaddonlib-jstimer
 */
@@ -165,7 +165,9 @@ function getOwnerWindowFromCaller(aCaller)
 {
 	try {
 		var global = aCaller.valueOf.call(null);
-		if (global && global instanceof Ci.nsIDOMWindow)
+		if (global &&
+			typeof global.Window == 'function' &&
+			global instanceof global.Window)
 			return global;
 	}
 	catch(e) {
