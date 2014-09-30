@@ -215,7 +215,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 	resume : function(aTabs)
 	{
-		if (aTabs instanceof Ci.nsIDOMElement)
+		if (aTabs instanceof this.window.Element)
 			aTabs = [aTabs];
 
 		aTabs.forEach(function(aTab) {
