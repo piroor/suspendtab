@@ -319,7 +319,10 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		// attribute so that it runs in a content process.
 		let activePageData = state.entries[activeIndex] || null;
 		let uri = activePageData ? activePageData.url || null : null;
-		tabbrowser.updateBrowserRemoteness(browser, uri);
+		if (typeof tabbrowser.updateBrowserRemotenessByURL == 'function') // Firefox 33 and later
+			tabbrowser.updateBrowserRemotenessByURL(browser, uri);
+		else // Firefox 32 or older
+			tabbrowser.updateBrowserRemoteness(browser, uri);
 
 		// Start a new epoch and include the epoch in the restoreHistory
 		// message. If a message is received that relates to a previous epoch, we
