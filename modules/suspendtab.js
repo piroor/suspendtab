@@ -45,12 +45,8 @@ var bundle = require('lib/locale')
 				.get('chrome://suspendtab/locale/label.properties');
 
 Cu.import('resource://gre/modules/Services.jsm');
-if (Services.vc.compare(Services.appinfo.version, '25.0') < 0) {
-	load('suspendtab-internal-24');
-}
-else {
-	load('suspendtab-internal');
-}
+
+load('suspendtab-internal');
 
 function SuspendTab(aWindow)
 {
