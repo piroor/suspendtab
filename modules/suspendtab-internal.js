@@ -126,7 +126,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		if (this.isSuspended(aTab))
 			return true;
 
-		let (event = this.document.createEvent('Events')) {
+		{
+			let event = this.document.createEvent('Events');
 			event.initEvent(this.EVENT_TYPE_SUSPENDING, true, true);
 			if (!aTab.dispatchEvent(event))
 				return false;
@@ -201,7 +202,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 				self.readyToResume(aTab);
 			}
 
-			let (event = self.document.createEvent('Events')) {
+			{
+				let event = self.document.createEvent('Events');
 				event.initEvent(self.EVENT_TYPE_SUSPENDED, true, false);
 				aTab.dispatchEvent(event);
 			}
@@ -236,7 +238,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 			return true;
 		}
 
-		let (event = this.document.createEvent('Events')) {
+		{
+			let event = this.document.createEvent('Events');
 			event.initEvent(this.EVENT_TYPE_RESUMING, true, true);
 			if (!aTab.dispatchEvent(event))
 				return false;

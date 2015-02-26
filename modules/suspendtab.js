@@ -178,7 +178,8 @@ SuspendTab.prototype = inherit(require('const'), {
 		var isLastTab = this.tabs.length == 1;
 		var tab = this.browser.mContextTab;
 
-		let (item = this.tabContextItem) {
+		{
+			let item = this.tabContextItem;
 			if (this.isSuspended(tab)) {
 				item.setAttribute('label', bundle.getString('tab.resume.label'));
 				item.setAttribute('accesskey',  bundle.getString('tab.resume.accesskey'));
@@ -192,7 +193,8 @@ SuspendTab.prototype = inherit(require('const'), {
 			item.hidden = !prefs.getPref(this.domain + 'menu.' + item.id);
 		}
 
-		let (item = this.tabContextAddDomainExceptionItem) {
+		{
+			let item = this.tabContextAddDomainExceptionItem;
 			if (this.isBlocked(tab))
 				item.setAttribute('checked', true);
 			else
@@ -644,7 +646,8 @@ SuspendTab.prototype = inherit(require('const'), {
 				var tab = gBrowser.mContextTab;
 				var tabs = [tab].concat(gBrowser.treeStyleTab.getDescendantTabs(tab));
 			*/);
-			let (item = this.document.createElement('menuitem')) {
+			{
+				let item = this.document.createElement('menuitem');
 				this.extraMenuItems.push(item);
 				item.setAttribute('id', 'context_suspendTree');
 				item.setAttribute('label', bundle.getString('tab.suspendTree.label'));
@@ -663,7 +666,8 @@ SuspendTab.prototype = inherit(require('const'), {
 					'return gBrowser.treeStyleTab.hasChildTabs(gBrowser.mContextTab);');
 				this.tabContextPopup.insertBefore(item, undoItem);
 			}
-			let (item = this.document.createElement('menuitem')) {
+			{
+				let item = this.document.createElement('menuitem');
 				this.extraMenuItems.push(item);
 				item.setAttribute('id', 'context_resumeTree');
 				item.setAttribute('label', bundle.getString('tab.resumeTree.label'));
