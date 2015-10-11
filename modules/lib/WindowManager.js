@@ -9,7 +9,7 @@
  * @url http://github.com/piroor/restartless
  */
 
-const EXPORTED_SYMBOLS = ['WindowManager'];
+var EXPORTED_SYMBOLS = ['WindowManager'];
 
 var _WindowWatcher = Cc['@mozilla.org/embedcomp/window-watcher;1']
 						.getService(Ci.nsIWindowWatcher);

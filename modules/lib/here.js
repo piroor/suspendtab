@@ -10,7 +10,7 @@
  * @url http://github.com/piroor/restartless
  */
 
-const EXPORTED_SYMBOLS = ['here'];
+var EXPORTED_SYMBOLS = ['here'];
 
 var cache = {};
 
