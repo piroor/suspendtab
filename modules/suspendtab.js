@@ -91,6 +91,10 @@ SuspendTab.prototype = inherit(require('const'), {
 	{
 		return this.document.getElementById('tabContextMenu');
 	},
+	get contentContextPopup()
+	{
+		return this.document.getElementById('contentAreaContextMenu');
+	},
 
 	get blockList()
 	{
@@ -172,9 +176,14 @@ SuspendTab.prototype = inherit(require('const'), {
 
 	onPopupShowing : function(aEvent)
 	{
-		if (!this.tabContextItem || aEvent.target != this.tabContextPopup)
-			return;
+		if (aEvent.target == this.tabContextPopup)
+			return this.onTabContextPopupShowing(aEvent);
+		if (aEvent.target == this.contentContextPopup)
+			return this.onContentContextPopupShowing(aEvent);
+	},
 
+	onTabContextPopupShowing : function(aEvent)
+	{
 		var isLastTab = this.tabs.length == 1;
 		var tab = this.browser.mContextTab;
 
@@ -203,19 +212,61 @@ SuspendTab.prototype = inherit(require('const'), {
 			item.hidden = !prefs.getPref(this.domain + 'menu.' + item.id);
 		}
 
-		let sandbox = new Cu.Sandbox(
+		this.showHideExtraItems(this.tabContextExtraMenuItems);
+	},
+	showHideExtraItems : function(aExtraItems)
+	{
+		var isLastTab = this.tabs.length == 1;
+		var visibleItemsCount = 0;
+		var sandbox = new Cu.Sandbox(
 				this.window,
 				{ sandboxPrototype: this.window }
 			);
-		this.extraMenuItems.forEach(function(aItem) {
+		aExtraItems.forEach(function(aItem) {
 			var availableChecker = aItem.getAttribute(this.MENUITEM_AVAILABLE);
 			var available = (availableChecker ? Cu.evalInSandbox('(function() { ' + availableChecker + '})()', sandbox) : true);
 			aItem.hidden = !available || !prefs.getPref(this.domain + 'menu.' + aItem.id);
+			if (!aItem.hidden)
+				visibleItemsCount++;
 
 			var enabledChecker = aItem.getAttribute(this.MENUITEM_ENABLED);
 			var enabled = (enabledChecker ? Cu.evalInSandbox('(function() { ' + enabledChecker + '})()', sandbox) : true);
 			aItem.disabled = !enabled || isLastTab;
 		}, this);
+		return visibleItemsCount > 0;
+	},
+
+	onContentContextPopupShowing : function(aEvent)
+	{
+		var isLastTab = this.tabs.length == 1;
+		var tab = this.browser.selectedTab;
+		var visibleItemsCount = 0;
+
+		{
+			let item = this.contentContextItem;
+			item.disabled = isLastTab;
+			item.hidden = !prefs.getPref(this.domain + 'menu.' + item.id);
+			if (!item.hidden)
+				visibleItemsCount++;
+		}
+
+		{
+			let item = this.contentContextAddDomainExceptionItem;
+			if (this.isBlocked(tab))
+				item.setAttribute('checked', true);
+			else
+				item.removeAttribute('checked');
+			item.disabled = !this.isBlockable(tab);
+			item.hidden = !prefs.getPref(this.domain + 'menu.' + item.id);
+			if (!item.hidden)
+				visibleItemsCount++;
+		}
+
+		var anyItemVisible = this.showHideExtraItems(this.contentContextExtraMenuItems);
+		if (anyItemVisible)
+			visibleItemsCount++;
+
+		this.contentContextSeparator.hidden = visibleItemsCount == 0;
 	},
 
 	onCommand : function(aEvent)
@@ -223,12 +274,15 @@ SuspendTab.prototype = inherit(require('const'), {
 		switch (aEvent.target.id)
 		{
 			case 'context_toggleTabSuspended':
+			case 'contentContext_suspend':
 				return this.onToggleSuspendedCommand(aEvent);
 
 			case 'context_toggleTabSuspendException':
+			case 'contentContext_toggleTabSuspendException':
 				return this.onToggleExceptionCommand(aEvent);
 
 			case 'context_suspendOthers':
+			case 'contentContext_suspendOthers':
 				return this.onSuspendOthersCommand(aEvent);
 
 			default:
@@ -238,7 +292,7 @@ SuspendTab.prototype = inherit(require('const'), {
 
 	onToggleSuspendedCommand : function(aEvent)
 	{
-		var tab = this.browser.mContextTab;
+		var tab = this.browser.mContextTab || this.browser.selectedTab;
 		var TST = this.browser.treeStyleTab;
 		if (this.isSuspended(tab)) {
 			let resumed = this.resume(tab);
@@ -325,7 +379,7 @@ SuspendTab.prototype = inherit(require('const'), {
 
 	onToggleExceptionCommand : function(aEvent)
 	{
-		var tab = this.browser.mContextTab;
+		var tab = this.browser.mContextTab || this.browser.selectedTab;
 		var uri = tab.linkedBrowser.currentURI;
 
 		var list = prefs.getPref(this.domain + 'autoSuspend.blockList') || '';
@@ -343,7 +397,7 @@ SuspendTab.prototype = inherit(require('const'), {
 
 	onSuspendOthersCommand : function(aEvent)
 	{
-		var tab = this.browser.mContextTab;
+		var tab = this.browser.mContextTab || this.browser.selectedTab;
 		Array.forEach(this.tabs, function(aTab) {
 			if (aTab != tab)
 				this.suspend(aTab);
@@ -631,24 +685,38 @@ SuspendTab.prototype = inherit(require('const'), {
 	initMenuItems : function()
 	{
 		this.tabContextPopup.addEventListener('popupshowing', this, false);
+		this.contentContextPopup.addEventListener('popupshowing', this, false);
 
 		this.tabContextItem = this.document.createElement('menuitem');
 		this.tabContextItem.setAttribute('id', 'context_toggleTabSuspended');
 		this.tabContextItem.addEventListener('command', this, false);
 
-		var undoItem = this.document.getElementById('context_undoCloseTab');
-		this.tabContextPopup.insertBefore(this.tabContextItem, undoItem);
+		var undoCloseTabItem = this.document.getElementById('context_undoCloseTab');
+		this.tabContextPopup.insertBefore(this.tabContextItem, undoCloseTabItem);
 
-		this.extraMenuItems = [];
+		this.contentContextSeparator = this.document.createElement('menuseparator');
+		this.contentContextSeparator.setAttribute('id', 'contentContext_suspend_separator');
+		this.contentContextPopup.appendChild(this.contentContextSeparator);
+
+		this.contentContextItem = this.document.createElement('menuitem');
+		this.contentContextItem.setAttribute('id', 'contentContext_suspend');
+		this.contentContextItem.setAttribute('label', bundle.getString('tab.suspend.label'));
+		this.contentContextItem.setAttribute('accesskey',  bundle.getString('tab.suspend.accesskey'));
+		this.contentContextItem.addEventListener('command', this, false);
+		this.contentContextPopup.appendChild(this.contentContextItem);
+
+
+		this.tabContextExtraMenuItems = [];
+		this.contentContextExtraMenuItems = [];
 
 		if ('TreeStyleTabService' in this.window) {
 			let collectTreeTabs = here(/*
-				var tab = gBrowser.mContextTab;
+				var tab = gBrowser.mContextTab || gBrowser.selectedTab;
 				var tabs = [tab].concat(gBrowser.treeStyleTab.getDescendantTabs(tab));
 			*/);
 			{
 				let item = this.document.createElement('menuitem');
-				this.extraMenuItems.push(item);
+				this.tabContextExtraMenuItems.push(item);
 				item.setAttribute('id', 'context_suspendTree');
 				item.setAttribute('label', bundle.getString('tab.suspendTree.label'));
 				item.setAttribute('accesskey', bundle.getString('tab.suspendTree.accesskey'));
@@ -663,12 +731,17 @@ SuspendTab.prototype = inherit(require('const'), {
 					});
 				*/));
 				item.setAttribute(this.MENUITEM_AVAILABLE,
-					'return gBrowser.treeStyleTab.hasChildTabs(gBrowser.mContextTab);');
-				this.tabContextPopup.insertBefore(item, undoItem);
+					'return gBrowser.treeStyleTab.hasChildTabs(gBrowser.mContextTab || gBrowser.selectedTab);');
+				this.tabContextPopup.insertBefore(item, undoCloseTabItem);
+
+				let contentItem = item.cloneNode(true);
+				this.contentContextExtraMenuItems.push(contentItem);
+				contentItem.setAttribute('id', 'contentContext_suspendTree');
+				this.contentContextPopup.appendChild(contentItem);
 			}
 			{
 				let item = this.document.createElement('menuitem');
-				this.extraMenuItems.push(item);
+				this.tabContextExtraMenuItems.push(item);
 				item.setAttribute('id', 'context_resumeTree');
 				item.setAttribute('label', bundle.getString('tab.resumeTree.label'));
 				item.setAttribute('accesskey', bundle.getString('tab.resumeTree.accesskey'));
@@ -683,8 +756,13 @@ SuspendTab.prototype = inherit(require('const'), {
 					});
 				*/));
 				item.setAttribute(this.MENUITEM_AVAILABLE,
-					'return gBrowser.treeStyleTab.hasChildTabs(gBrowser.mContextTab);');
-				this.tabContextPopup.insertBefore(item, undoItem);
+					'return gBrowser.treeStyleTab.hasChildTabs(gBrowser.mContextTab || gBrowser.selectedTab);');
+				this.tabContextPopup.insertBefore(item, undoCloseTabItem);
+
+				let contentItem = item.cloneNode(true);
+				this.contentContextExtraMenuItems.push(contentItem);
+				contentItem.setAttribute('id', 'contentContext_resumeTree');
+				this.contentContextPopup.appendChild(contentItem);
 			}
 		}
 
@@ -693,7 +771,13 @@ SuspendTab.prototype = inherit(require('const'), {
 		this.tabContextSuspendOthersItem.setAttribute('label', bundle.getString('tab.suspendOthers.label'));
 		this.tabContextSuspendOthersItem.setAttribute('accesskey', bundle.getString('tab.suspendOthers.accesskey'));
 		this.tabContextSuspendOthersItem.addEventListener('command', this, false);
-		this.tabContextPopup.insertBefore(this.tabContextSuspendOthersItem, undoItem);
+		this.tabContextPopup.insertBefore(this.tabContextSuspendOthersItem, undoCloseTabItem);
+
+		this.contentContextSuspendOthersItem = this.tabContextSuspendOthersItem.cloneNode(true);
+		this.contentContextSuspendOthersItem.setAttribute('id', 'contentContext_suspendOthers');
+		this.contentContextSuspendOthersItem.addEventListener('command', this, false);
+		this.contentContextPopup.appendChild(this.contentContextSuspendOthersItem);
+
 
 		this.tabContextAddDomainExceptionItem = this.document.createElement('menuitem');
 		this.tabContextAddDomainExceptionItem.setAttribute('id', 'context_toggleTabSuspendException');
@@ -701,7 +785,12 @@ SuspendTab.prototype = inherit(require('const'), {
 		this.tabContextAddDomainExceptionItem.setAttribute('accesskey', bundle.getString('tab.exception.add.accesskey'));
 		this.tabContextAddDomainExceptionItem.setAttribute('type', 'checkbox');
 		this.tabContextAddDomainExceptionItem.addEventListener('command', this, false);
-		this.tabContextPopup.insertBefore(this.tabContextAddDomainExceptionItem, undoItem);
+		this.tabContextPopup.insertBefore(this.tabContextAddDomainExceptionItem, undoCloseTabItem);
+
+		this.contentContextAddDomainExceptionItem = this.tabContextAddDomainExceptionItem.cloneNode(true);
+		this.contentContextAddDomainExceptionItem.setAttribute('id', 'contentContext_toggleTabSuspendException');
+		this.contentContextAddDomainExceptionItem.addEventListener('command', this, false);
+		this.contentContextPopup.appendChild(this.contentContextAddDomainExceptionItem);
 	},
 
 	destroy : function()
@@ -737,23 +826,30 @@ SuspendTab.prototype = inherit(require('const'), {
 	destroyMenuItems : function()
 	{
 		this.tabContextPopup.removeEventListener('popupshowing', this, false);
+		this.contentContextPopup.removeEventListener('popupshowing', this, false);
 
-		this.tabContextItem.removeEventListener('command', this, false);
-		this.tabContextItem.parentNode.removeChild(this.tabContextItem);
-		delete this.tabContextItem;
+		[
+			'tabContextItem',
+			'contentContextItem',
+			'tabContextSuspendOthersItem',
+			'contentContextSuspendOthersItem',
+			'tabContextAddDomainExceptionItem',
+			'contentContextAddDomainExceptionItem'
+		].forEach(function(aKey) {
+			this[aKey].removeEventListener('command', this, false);
+			this[aKey].removeChild(this[aKey]);
+			delete this[aKey];
+		}, this);
 
-		this.tabContextSuspendOthersItem.removeEventListener('command', this, false);
-		this.tabContextSuspendOthersItem.parentNode.removeChild(this.tabContextSuspendOthersItem);
-		delete this.tabContextSuspendOthersItem;
-
-		this.tabContextAddDomainExceptionItem.removeEventListener('command', this, false);
-		this.tabContextAddDomainExceptionItem.parentNode.removeChild(this.tabContextAddDomainExceptionItem);
-		delete this.tabContextAddDomainExceptionItem;
-
-		this.extraMenuItems.forEach(function(aItem) {
+		[this.contentContextSeparator]
+			.concat(this.tabContextExtraMenuItems)
+			.concat(this.contentContextExtraMenuItems)
+			.forEach(function(aItem) {
 			aItem.parentNode.removeChild(aItem);
 		});
-		delete this.extraMenuItems;
+		delete this.contentContextSeparator;
+		delete this.tabContextExtraMenuItems;
+		delete this.contentContextExtraMenuItems;
 	},
 
 
