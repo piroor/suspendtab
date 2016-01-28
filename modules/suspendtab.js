@@ -523,7 +523,7 @@ SuspendTab.prototype = inherit(require('const'), {
 		}
 
 		aTab.__suspendtab__timestamp = timestamp || now;
-		aTab.__suspendtab__timer = timer.setTimeout(function(aSelf) {
+		aTab.__suspendtab__timer = setTimeout(function(aSelf) {
 			aTab.__suspendtab__timestamp = 0;
 			aTab.__suspendtab__timer = null;
 			if (aSelf.autoSuspend)

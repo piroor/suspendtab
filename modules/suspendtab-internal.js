@@ -195,7 +195,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 			// Because Firefox sets the default favicon on this event loop,
 			// we have to reset the favicon in the next loop.
-			timer.setTimeout(function() {
+			setTimeout(function() {
 				aTab.setAttribute('image', state.attributes.image || state.image);
 			}, 0);
 
@@ -404,7 +404,7 @@ function shutdown(aReason)
 		aInstance.destroy();
 	});
 
-	timer = undefined;
+	setTimeout = clearTimeout = undefined;
 
 	SS = undefined;
 	SessionStoreInternal = undefined;
