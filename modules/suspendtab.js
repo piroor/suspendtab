@@ -118,11 +118,11 @@ SuspendTab.prototype = inherit(require('const'), {
 	_generateRegExpFromRule : function(aRule)
 	{
 		try {
+			var ruleWithScheme = this.RULE_WITH_SCHEME.test(aRule);
 			var regexp = aRule.replace(/\./g, '\\.')
 							.replace(/\?/g, '.')
 							.replace(/\*/g, '.*');
-			regexp = aRule.indexOf('/') < 0 ?
-						regexp : '^' + regexp;
+			regexp = ruleWithScheme ? '^' + regexp : regexp ;
 			return regexp && new RegExp(regexp, 'i');
 		}
 		catch(error) {
@@ -528,6 +528,7 @@ SuspendTab.prototype = inherit(require('const'), {
 		}, this);
 	},
 	RULE_WITH_SCHEME : /^[^:]+:/,
+	SCHEME_PART_MATCHER : /^[^:]+(?:\/\/)?/,
 	testBlockRule : function(aRule, aURI)
 	{
 		if (this.RULE_WITH_SCHEME.test(aRule.source)) {
@@ -535,7 +536,8 @@ SuspendTab.prototype = inherit(require('const'), {
 		}
 		else {
 			try {
-				return aRule.test(aURI.host);
+				let specWithoutScheme = aURI.spec.replace(this.SCHEME_PART_MATCHER);
+				return aRule.test(specWithoutScheme);
 			}
 			catch(e) {
 				return false;
