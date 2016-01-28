@@ -423,12 +423,12 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 		// Update the persistent tab state cache with |state| information.
 		TabStateCache.update(browser, {
-		  history: {entries: state.entries, index: state.index},
-		  scroll: state.scroll || null,
-		  storage: state.storage || null,
-		  formdata: state.formdata || null,
-		  disallow: state.disallow || null,
-		  pageStyle: state.pageStyle || null
+			history: {entries: state.entries, index: state.index},
+			scroll: state.scroll || null,
+			storage: state.storage || null,
+			formdata: state.formdata || null,
+			disallow: state.disallow || null,
+			pageStyle: state.pageStyle || null
 		});
 
 		browser.messageManager.sendAsyncMessage("SessionStore:restoreHistory",
