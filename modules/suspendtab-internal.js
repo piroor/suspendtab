@@ -6,7 +6,6 @@ var EXPORTED_SYMBOLS = ['SuspendTabInternal'];
 
 load('lib/prefs');
 load('lib/here');
-var timer = require('lib/jstimer');
 
 var SS = Cc['@mozilla.org/browser/sessionstore;1']
 			.getService(Ci.nsISessionStore);
