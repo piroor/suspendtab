@@ -20,6 +20,13 @@ var TAB_STATE_NEEDS_RESTORE = 1;
 //var { TabRestoreStates } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
 var { TabState } = Cu.import('resource:///modules/sessionstore/TabState.jsm', {});
 var { TabStateCache } = Cu.import('resource:///modules/sessionstore/TabStateCache.jsm', {});
+var TabStateFlusher;
+try {
+	{ TabStateFlusher } = Cu.import('resource:///modules/sessionstore/TabStateFlusher.jsm', {});
+}
+catch(e) {
+	// for old Firefox
+}
 
 function isInternalAPIsAvailable() {
 	if (!SessionStoreInternal) {
@@ -30,21 +37,24 @@ function isInternalAPIsAvailable() {
 		Cu.reportError(new Error('suspendtab: SessionStoreInternal does not have restoreTabContent() method'));
 		return false;
 	}
-	if (typeof SessionStoreInternal._nextRestoreEpoch == 'undefined') {
-		Cu.reportError(new Error('suspendtab: SessionStoreInternal does not have _nextRestoreEpoch'));
+	if (
+		typeof SessionStoreInternal.startNextEpoch == 'undefined') {
+		if (typeof SessionStoreInternal._nextRestoreEpoch == 'undefined') { // for old Firefox
+		Cu.reportError(new Error('suspendtab: SessionStoreInternal does not have startNextEpoch or _nextRestoreEpoch'));
 		return false;
 	}
 	if (typeof SessionStoreInternal._browserEpochs == 'undefined') {
 		Cu.reportError(new Error('suspendtab: SessionStoreInternal does not have _browserEpochs'));
 		return false;
 	}
+	}
 
 	if (!TabState) {
 		Cu.reportError(new Error('suspendtab: Failed to load TabState'));
 		return false;
 	}
-	if (!TabState.flush) {
-		Cu.reportError(new Error('suspendtab: TabState does not have flush() method'));
+	if (!TabStateFlusher || !TabStateFlusher.flush && !TabState.flush) {
+		Cu.reportError(new Error('suspendtab: Missing both TabStateFlusher.flush() and TabState.flush()'));
 		return false;
 	}
 	if (!TabState.clone) {
@@ -142,7 +152,12 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		var browser = aTab.linkedBrowser;
 		var wasBusy = aTab.getAttribute('busy') == 'true';
 
-		TabState.flush(browser);
+		if (TabStateFlusher) {
+			TabStateFlusher.flush(browser);
+		}
+		else {
+			TabState.flush(browser);
+		}
 		var state = TabState.clone(aTab);
 		fullStates.set(aTab, state);
 
@@ -332,8 +347,13 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		// Start a new epoch and include the epoch in the restoreHistory
 		// message. If a message is received that relates to a previous epoch, we
 		// discard it.
-		let epoch = SessionStoreInternal._nextRestoreEpoch++;
-		SessionStoreInternal._browserEpochs.set(browser.permanentKey, epoch);
+		let epoch;
+		if (typeof SessionStoreInternal.startNextEpoch == 'function') {
+			epoch = SessionStoreInternal.startNextEpoch(browser);
+		} else {
+			epoch = SessionStoreInternal._nextRestoreEpoch++;
+			SessionStoreInternal._browserEpochs.set(browser.permanentKey, epoch);
+		}
 
 		// keep the data around to prevent dataloss in case
 		// a tab gets closed before it's been properly restored
@@ -391,6 +411,7 @@ function shutdown(aReason)
 	// TabRestoreStates = undefined;
 	TabState = undefined;
 	TabStateCache = undefined;
+	TabStateFlusher = undefined;
 
 	fullStates = undefined;
 
