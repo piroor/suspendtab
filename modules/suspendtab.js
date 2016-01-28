@@ -369,9 +369,7 @@ SuspendTab.prototype = inherit(require('const'), {
 		if (this.debug)
 			dump('tab '+tab._tPos+' is selected.\n');
 		this.cancelTimer(tab);
-		//Don't resume the tab manually. We don't need to do it.
-		//See: https://github.com/piroor/suspendtab/issues/43#issuecomment-176052852
-		// this.resume(tab);
+		this.resume(tab);
 		this.setTimers();
 		tab.__suspendtab__lastFocused = Date.now();
 	},

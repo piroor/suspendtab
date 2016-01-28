@@ -247,7 +247,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		if (!this.isSuspended(aTab))
 			return true;
 
-		if (this.isSuspendedBySS(aTab)) {
+		if (this.isSuspendedBySS(aTab) && !aTab.selected) {
 			// Reloading action resumes the pending restoration.
 			// This will fire "SSTabRestored" event, then this method
 			// will be called again to restore actual history entries.
