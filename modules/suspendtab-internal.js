@@ -20,12 +20,12 @@ var TAB_STATE_NEEDS_RESTORE = 1;
 //var { TabRestoreStates } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
 var { TabState } = Cu.import('resource:///modules/sessionstore/TabState.jsm', {});
 var { TabStateCache } = Cu.import('resource:///modules/sessionstore/TabStateCache.jsm', {});
-var TabStateFlusher;
 try {
-	{ TabStateFlusher } = Cu.import('resource:///modules/sessionstore/TabStateFlusher.jsm', {});
+	var { TabStateFlusher } = Cu.import('resource:///modules/sessionstore/TabStateFlusher.jsm', {});
 }
 catch(e) {
 	// for old Firefox
+	var TabStateFlusher;
 }
 
 function isInternalAPIsAvailable() {
