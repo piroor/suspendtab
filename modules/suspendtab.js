@@ -74,6 +74,10 @@ SuspendTab.prototype = inherit(require('const'), {
 	{
 		return prefs.getPref(this.domain + 'autoSuspend.newBackgroundTab');
 	},
+	get autoSuspendNewBackgroundTabAfterLoad()
+	{
+		return prefs.getPref(this.domain + 'autoSuspend.newBackgroundTab.afterLoad');
+	},
 
 	get document()
 	{
@@ -410,11 +414,18 @@ SuspendTab.prototype = inherit(require('const'), {
 			return;
 
 		var tab = aEvent.originalTarget;
-		setTimeout(function(aSelf) {
+
+		if (!tab.selected &&
+			this.autoSuspendNewBackgroundTabAfterLoad)
+			tab.__suspendtab__suspendAfterLoad = true;
+
+		setTimeout((function() {
 			if (!tab.parentNode || tab.selected)
 				return;
-			aSelf.suspend(tab, { newTabNotLoadedYet : true });
-		}, 0, this);
+
+			if (!this.autoSuspendNewBackgroundTabAfterLoad)
+				this.suspend(tab, { newTabNotLoadedYet : true });
+		}).bind(this), 0);
 	},
 
 	onTabSelect : function(aEvent)

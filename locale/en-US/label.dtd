@@ -50,6 +50,7 @@
 <!ENTITY autoSuspend.blockList.description2 "Available wildcatds: ?=any one letter, *=0 or more any letters">
 <!ENTITY autoSuspend.blockList.description3 "ex: example.com http://example.jp/*">
 <!ENTITY autoSuspend.newBackgroundTab "Don't load new background tabs by default">
+<!ENTITY autoSuspend.newBackgroundTab.afterLoad "but try to cache the content">
 
 <!ENTITY tab.focus "Focus">
 <!ENTITY nextFocus.caption  "Next focused tab when the current tab is suspended">

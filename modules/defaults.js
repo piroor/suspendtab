@@ -44,6 +44,7 @@ prefs.setDefaultPref(domain+'autoSuspend.timeout.factor', 1000 * 60);
 prefs.setDefaultPref(domain+'autoSuspend.blockList', '');
 prefs.setDefaultPref(domain+'autoSuspend.resetOnReload', true);
 prefs.setDefaultPref(domain+'autoSuspend.newBackgroundTab', false);
+prefs.setDefaultPref(domain+'autoSuspend.newBackgroundTab.afterLoad', false);
 prefs.setDefaultPref(domain+'autoSuspend.nextFocus', SuspendTabConst.NEXT_FOCUS_AUTO);
 prefs.setDefaultPref(domain+'saferSuspend', true);
 prefs.setDefaultPref(domain+'menu.context_toggleTabSuspended', true);

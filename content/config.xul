@@ -63,6 +63,9 @@
 			<preference id="autoSuspend.newBackgroundTab"
 				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.newBackgroundTab"
 				type="bool"/>
+			<preference id="autoSuspend.newBackgroundTab.afterLoad"
+				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.newBackgroundTab.afterLoad"
+				type="bool"/>
 		</preferences>
 
 		<checkbox label="&autoSuspend.enabled;"
@@ -121,6 +124,11 @@
 		</hbox>
 		<checkbox label="&autoSuspend.newBackgroundTab;"
 			preference="autoSuspend.newBackgroundTab"/>
+		<hbox align="center">
+			<spacer style="width:1em;"/>
+			<checkbox label="&autoSuspend.newBackgroundTab.afterLoad;"
+				preference="autoSuspend.newBackgroundTab.afterLoad"/>
+		</hbox>
 	</prefpane>
 
 	<prefpane id="prefpane-focus"

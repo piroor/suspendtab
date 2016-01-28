@@ -162,16 +162,26 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		if (this.debug)
 			dump(' suspend '+aTab._tPos+'\n');
 
+		var browser = aTab.linkedBrowser;
+		if (TabStateFlusher) {
+			TabStateFlusher.flush(browser)
+				.then((function() {
+					this.suspendPostProcess(aTab, aOptions);
+				}).bind(this));
+		}
+		else {
+			TabState.flush(browser);
+			this.suspendPostProcess(aTab, aOptions);
+		}
+
+		return true;
+	},
+	suspendPostProcess : function(aTab, aOptions)
+	{
 		var label   = aTab.label;
 		var browser = aTab.linkedBrowser;
 		var wasBusy = aTab.getAttribute('busy') == 'true';
 
-		if (TabStateFlusher) {
-			TabStateFlusher.flush(browser);
-		}
-		else {
-			TabState.flush(browser);
-		}
 		var state = TabState.clone(aTab);
 		fullStates.set(aTab, state);
 
@@ -202,10 +212,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 				debug : prefs.getPref(this.domain + 'debug.content')
 			}
 		});
-
-		return true;
 	},
-	suspendPostProcess : function(aTab, aParams)
+	completeSuspend : function(aTab, aParams)
 	{
 		aParams = aParams || {};
 
@@ -269,7 +277,16 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 				return;
 
 			case 'suspended':
-				this.suspendPostProcess(tab, aMessage.json.params);
+				this.completeSuspend(tab, aMessage.json.params);
+				return;
+
+			case 'loaded':
+				if (!tab.selected && tab.__suspendtab__suspendAfterLoad) {
+					setTimeout((function() {
+						delete tab.__suspendtab__suspendAfterLoad;
+						this.suspend(tab);
+					}).bind(this), 500);
+				}
 				return;
 		}
 	},

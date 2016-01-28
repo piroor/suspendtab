@@ -50,6 +50,7 @@
 <!ENTITY autoSuspend.blockList.description2 "利用可能なワイルドカード： ?=任意の1文字, *=0個以上の任意の文字">
 <!ENTITY autoSuspend.blockList.description3 "例：example.com http://example.jp/*">
 <!ENTITY autoSuspend.newBackgroundTab "新しくバックグラウンドで開いたタブは自動的には読み込まない">
+<!ENTITY autoSuspend.newBackgroundTab.afterLoad "一旦読み込んでキャッシュしておく">
 
 <!ENTITY tab.focus "フォーカス">
 <!ENTITY nextFocus.caption  "現在のタブをサスペンドした場合に次に選択するタブ">

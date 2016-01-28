@@ -15,6 +15,7 @@
 			Services =
 			MESSAGE_TYPE =
 			suspend =
+			onContentLoaded =
 			handleMessage =
 				undefined;
 	}
@@ -57,6 +58,14 @@
 		content.location.href = 'about:blank';
 	}
 
+	function onContentLoaded()
+	{
+		global.sendAsyncMessage(MESSAGE_TYPE, {
+			command : 'loaded'
+		});
+	}
+	global.addEventListener('load', onContentLoaded, true);
+
 	function handleMessage(aMessage)
 	{
 		switch (aMessage.json.command)
@@ -69,6 +78,7 @@
 
 			case 'shutdown':
 				global.removeMessageListener(MESSAGE_TYPE, handleMessage);
+				global.removeEventListener('load', onContentLoaded, true);
 				free();
 				return;
 		}
