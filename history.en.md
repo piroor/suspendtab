@@ -1,6 +1,8 @@
 # History
 
  - master/HEAD
+   * Works on Nightly 47.0a1.
+   * Supports e10s.
    * Add "Don't suspend this site automatically" to the tab context menu.
    * Detect host name of web pages more correctly.
    * Visibility options for menu items work correctly.

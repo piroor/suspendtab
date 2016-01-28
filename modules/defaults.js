@@ -14,7 +14,7 @@
  * The Original Code is Suspend Tab.
  *
  * The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
- * Portions created by the Initial Developer are Copyright (C) 2012-2014
+ * Portions created by the Initial Developer are Copyright (C) 2012-2016
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):: YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -52,3 +52,4 @@ prefs.setDefaultPref(domain+'menu.context_suspendOthers', true);
 prefs.setDefaultPref(domain+'menu.context_suspendTree', true);
 prefs.setDefaultPref(domain+'menu.context_resumeTree', true);
 prefs.setDefaultPref(domain+'debug', false);
+prefs.setDefaultPref(domain+'debug.content', false);

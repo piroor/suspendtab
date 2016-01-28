@@ -81,6 +81,8 @@ function SuspendTabInternal(aWindow)
 	this.init(aWindow);
 }
 SuspendTabInternal.prototype = inherit(require('const'), {
+	MESSAGE_TYPE: 'suspendtab@piro.sakura.ne.jp',
+	SCRIPT_URL: 'chrome://suspendtab/content/content-utils.js',
 
 	get debug()
 	{
@@ -101,11 +103,23 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 	{
 		SuspendTabInternal.instances.push(this);
 		this.window = aWindow;
+
+		this.handleMessage = this.handleMessage.bind(this);
+		this.window.messageManager.addMessageListener(this.MESSAGE_TYPE, this.handleMessage);
+		this.window.messageManager.loadFrameScript(this.SCRIPT_URL, true);
 	},
 
 	destroy : function(aWindow)
 	{
+		this.window.messageManager.broadcastAsyncMessage(this.MESSAGE_TYPE, {
+			command : 'shutdown'
+		});
+		this.window.messageManager.removeDelayedFrameScript(this.SCRIPT_URL);
+		this.window.messageManager.removeMessageListener(this.MESSAGE_TYPE, this.handleMessage);
+		this.handleMessage = undefined;
+
 		delete this.window;
+
 		if (SuspendTabInternal)
 			SuspendTabInternal.instances.splice(SuspendTabInternal.instances.indexOf(this), 1);
 	},
@@ -166,7 +180,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 			uri = Services.io.newURI(state.userTypedValue, null, null);
 
 		if (wasBusy)
-			aOptions.label = uri.spec;
+			label = aOptions.label = uri.spec;
 
 		// We only need minimum data required to restore the session history,
 		// so drop needless information.
@@ -179,62 +193,85 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		SS.setTabValue(aTab, this.STATE, JSON.stringify(partialState));
 		SS.setTabValue(aTab, this.OPTIONS, JSON.stringify(aOptions));
 
-		var SHistory = browser.sessionHistory;
-
-		var self = this;
-		browser.addEventListener('load', function onLoad() {
-			browser.removeEventListener('load', onLoad, true);
-
-			if (wasBusy)
-				label = uri.spec;
-
-			aTab.setAttribute('label', label);
-			aTab.setAttribute('visibleLabel', label);
-			if (self.debug)
-				aTab.setAttribute('tooltiptext', label +' (suspended)');
-
-			// Because Firefox sets the default favicon on this event loop,
-			// we have to reset the favicon in the next loop.
-			setTimeout(function() {
-				if (self.debug)
-					dump(' => set icon '+(state.attributes.image || state.image)+'\n');
-				aTab.setAttribute('image', state.attributes.image || state.image);
-				setTimeout(function() { // we have to do this again with delay!
-					aTab.setAttribute('image', state.attributes.image || state.image);
-				}, 0);
-			}, 0);
-
-			browser.docShell.setCurrentURI(uri);
-			browser.contentDocument.title = label;
-
-			// Don't purge all histories - leave the last one!
-			// The SS module stores the title of the history entry
-			// as the title of the restored tab.
-			// If there is no history entry, Firefox will restore
-			// the tab with the default title (the URI of the page).
-			if (SHistory.count > 1)
-				SHistory.PurgeHistory(SHistory.count - 1);
-
-			aTab.setAttribute('pending', true);
-			aTab.setAttribute(self.SUSPENDED, true);
-
-			if (self.saferSuspend) {
-				if (self.debug)
-					dump(' => ready to restore '+aTab._tPos+'\n');
-				self.readyToResume(aTab);
+		aTab.linkedBrowser.messageManager.sendAsyncMessage(this.MESSAGE_TYPE, {
+			command : 'suspend',
+			params  : {
+				uri   : uri.spec,
+				label : label,
+				icon  : state.attributes.image || state.image,
+				debug : prefs.getPref(this.domain + 'debug.content')
 			}
-
-			{
-				let event = self.document.createEvent('Events');
-				event.initEvent(self.EVENT_TYPE_SUSPENDED, true, false);
-				aTab.dispatchEvent(event);
-			}
-		}, true);
-
-		// Load a blank page to clear out the current history entries.
-		browser.loadURI('about:blank');
+		});
 
 		return true;
+	},
+	suspendPostProcess : function(aTab, aParams)
+	{
+		aParams = aParams || {};
+
+		var label = aParams.label || '';
+		var icon = aParams.icon || '';
+
+		aTab.setAttribute('label', label);
+		aTab.setAttribute('visibleLabel', label);
+		if (this.debug)
+			aTab.setAttribute('tooltiptext', label +' (suspended)');
+
+		// Because Firefox sets the default favicon on this event loop,
+		// we have to reset the favicon in the next loop.
+		setTimeout((function() {
+			if (this.debug)
+				dump(' => set icon '+icon+'\n');
+			this.window.gBrowser.setIcon(aTab, icon, aTab.linkedBrowser.contentPrincipal);
+		}).bind(this), 0);
+
+		aTab.setAttribute('pending', true);
+		aTab.setAttribute(this.SUSPENDED, true);
+
+		if (this.saferSuspend) {
+			if (this.debug)
+				dump(' => ready to restore '+aTab._tPos+'\n');
+			this.readyToResume(aTab);
+		}
+
+		{
+			let event = this.document.createEvent('Events');
+			event.initEvent(this.EVENT_TYPE_SUSPENDED, true, false);
+			aTab.dispatchEvent(event);
+		}
+	},
+
+	handleMessage : function(aMessage)
+	{
+		if (this.debug) {
+			dump('*********************handleMessage*******************\n');
+			dump('TARGET IS: '+aMessage.target.localName+'\n');
+			dump(JSON.stringify(aMessage.json)+'\n');
+		}
+
+		var tab;
+		try {
+			tab = this.window.gBrowser.getTabForBrowser(aMessage.target);
+		}
+		catch(e) {
+			dump(e + '\n');
+		}
+
+		if (!tab) {
+			dump(' => message from non-tab target\n');
+			return;
+		}
+
+		switch (aMessage.json.command)
+		{
+			case 'initialized':
+				dump(' => tab '+tab._tPos+' initialized\n');
+				return;
+
+			case 'suspended':
+				this.suspendPostProcess(tab, aMessage.json.params);
+				return;
+		}
 	},
 
 	resume : function(aTabs)
