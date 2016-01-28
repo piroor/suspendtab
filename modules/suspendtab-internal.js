@@ -418,8 +418,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		// a tab gets closed before it's been properly restored
 		browser.__SS_data = state;
 		browser.__SS_restoreState = TAB_STATE_NEEDS_RESTORE;
-		browser.setAttribute("pending", "true");
-		aTab.setAttribute("pending", "true");
+		browser.setAttribute('pending', 'true');
+		aTab.setAttribute('pending', 'true');
 
 		// Update the persistent tab state cache with |state| information.
 		TabStateCache.update(browser, {
@@ -428,10 +428,17 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 			storage: state.storage || null,
 			formdata: state.formdata || null,
 			disallow: state.disallow || null,
-			pageStyle: state.pageStyle || null
+			pageStyle: state.pageStyle || null,
+			// This information is only needed until the tab has finished restoring.
+			// When that's done it will be removed from the cache and we always
+			// collect it in TabState._collectBaseTabData().
+			// See also: https://github.com/piroor/suspendtab/issues/43#issuecomment-176325115
+			image: state.image || '',
+			userTypedValue: state.userTypedValue || '',
+			userTypedClear: state.userTypedClear || 0
 		});
 
-		browser.messageManager.sendAsyncMessage("SessionStore:restoreHistory",
+		browser.messageManager.sendAsyncMessage('SessionStore:restoreHistory',
 		                                        {tabData: state, epoch: epoch});
 		// ==END==
 
