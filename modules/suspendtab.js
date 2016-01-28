@@ -576,7 +576,7 @@ SuspendTab.prototype = inherit(require('const'), {
 	reserveGC : function()
 	{
 		if (this.GCTimer) return;
-		this.GCTimer = timer.setTimeout(function(aSelf) {
+		this.GCTimer = setTimeout(function(aSelf) {
 			aSelf.GCTimer= null;
 
 			Cu.forceGC();
