@@ -40,13 +40,13 @@ function isInternalAPIsAvailable() {
 	if (
 		typeof SessionStoreInternal.startNextEpoch == 'undefined') {
 		if (typeof SessionStoreInternal._nextRestoreEpoch == 'undefined') { // for old Firefox
-		Cu.reportError(new Error('suspendtab: SessionStoreInternal does not have startNextEpoch or _nextRestoreEpoch'));
-		return false;
-	}
-	if (typeof SessionStoreInternal._browserEpochs == 'undefined') {
-		Cu.reportError(new Error('suspendtab: SessionStoreInternal does not have _browserEpochs'));
-		return false;
-	}
+			Cu.reportError(new Error('suspendtab: SessionStoreInternal does not have startNextEpoch or _nextRestoreEpoch'));
+			return false;
+		}
+		if (typeof SessionStoreInternal._browserEpochs == 'undefined') {
+			Cu.reportError(new Error('suspendtab: SessionStoreInternal does not have _browserEpochs'));
+			return false;
+		}
 	}
 
 	if (!TabState) {
