@@ -11,7 +11,8 @@ var timer = require('lib/jstimer');
 var SS = Cc['@mozilla.org/browser/sessionstore;1']
 			.getService(Ci.nsISessionStore);
 
-Cu.import('resource://gre/modules/Services.jsm');
+var { Services } = Cu.import('resource://gre/modules/Services.jsm', {});
+var { setTimeout, clearTimeout } = Cu.import('resource://gre/modules/Timer.jsm', {});
 
 var { SessionStoreInternal } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
 var { TAB_STATE_NEEDS_RESTORE } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});

@@ -14,7 +14,7 @@
  * The Original Code is Suspend Tab.
  *
  * The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
- * Portions created by the Initial Developer are Copyright (C) 2012-2014
+ * Portions created by the Initial Developer are Copyright (C) 2012-2016
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):: YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -39,12 +39,12 @@ var EXPORTED_SYMBOLS = ['SuspendTab'];
 load('lib/WindowManager');
 load('lib/prefs');
 load('lib/here');
-var timer = require('lib/jstimer');
 
 var bundle = require('lib/locale')
 				.get('chrome://suspendtab/locale/label.properties');
 
-Cu.import('resource://gre/modules/Services.jsm');
+var { Services } = Cu.import('resource://gre/modules/Services.jsm', {});
+var { setTimeout, clearTimeout } = Cu.import('resource://gre/modules/Timer.jsm', {});
 
 load('suspendtab-internal');
 
@@ -356,7 +356,7 @@ SuspendTab.prototype = inherit(require('const'), {
 			return;
 
 		var tab = aEvent.originalTarget;
-		timer.setTimeout(function(aSelf) {
+		setTimeout(function(aSelf) {
 			if (!tab.parentNode || tab.selected)
 				return;
 			aSelf.suspend(tab, { newTabNotLoadedYet : true });
@@ -495,7 +495,7 @@ SuspendTab.prototype = inherit(require('const'), {
 		if (aTab.__suspendtab__timer) {
 			if (this.debug)
 				dump(' cancel timer for '+aTab._tPos+'\n');
-			timer.clearTimeout(aTab.__suspendtab__timer);
+			clearTimeout(aTab.__suspendtab__timer);
 			aTab.__suspendtab__timestamp = 0;
 			aTab.__suspendtab__timer = null;
 			this.updateTooltip(aTab);
@@ -804,7 +804,7 @@ function shutdown(aReason)
 	});
 
 	WindowManager = undefined;
-	timer = undefined;
+	setTimeout = clearTimeout = undefined;
 	bundle = undefined;
 	Services = undefined;
 
