@@ -15,7 +15,9 @@ var { Services } = Cu.import('resource://gre/modules/Services.jsm', {});
 var { setTimeout, clearTimeout } = Cu.import('resource://gre/modules/Timer.jsm', {});
 
 var { SessionStoreInternal } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
-var { TAB_STATE_NEEDS_RESTORE } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
+//var { TAB_STATE_NEEDS_RESTORE } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
+//it can't be exported because it is defined by ES6 const.
+var TAB_STATE_NEEDS_RESTORE = 1;
 //var { TabRestoreStates } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
 var { TabState } = Cu.import('resource:///modules/sessionstore/TabState.jsm', {});
 var { TabStateCache } = Cu.import('resource:///modules/sessionstore/TabStateCache.jsm', {});
