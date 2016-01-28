@@ -212,7 +212,6 @@ SuspendTab.prototype = inherit(require('const'), {
 				item.setAttribute('checked', true);
 			else
 				item.removeAttribute('checked');
-			item.disabled = !this.isBlockable(tab);
 			item.hidden = !prefs.getPref(this.domain + 'menu.' + item.id);
 		}
 
@@ -260,7 +259,6 @@ SuspendTab.prototype = inherit(require('const'), {
 				item.setAttribute('checked', true);
 			else
 				item.removeAttribute('checked');
-			item.disabled = !this.isBlockable(tab);
 			item.hidden = !prefs.getPref(this.domain + 'menu.' + item.id);
 			if (!item.hidden)
 				visibleItemsCount++;
@@ -394,7 +392,13 @@ SuspendTab.prototype = inherit(require('const'), {
 			}, this).join(' ');
 		}
 		else {
-			list = (list + ' ' + uri.host).trim();
+			let matcher = uri.spec;
+			try {
+				matcher = uri.host;
+			}
+			catch(e) {
+			}
+			list = (list + ' ' + matcher).trim();
 		}
 		prefs.setPref(this.domain + 'autoSuspend.blockList', list);
 	},
@@ -511,17 +515,7 @@ SuspendTab.prototype = inherit(require('const'), {
 			)
 			return false;
 
-		return !this.isBlockable(aTab) || !this.isBlocked(aTab);
-	},
-	isBlockable : function(aTab)
-	{
-		var uri = aTab.linkedBrowser.currentURI;
-		try {
-			return Boolean(uri.host);
-		}
-		catch(e) {
-			return false;
-		}
+		return !this.isBlocked(aTab);
 	},
 	isBlocked : function(aTab)
 	{
@@ -533,18 +527,19 @@ SuspendTab.prototype = inherit(require('const'), {
 			return this.testBlockRule(aRule, uri);
 		}, this);
 	},
+	RULE_WITH_SCHEME : /^[^:]+:/,
 	testBlockRule : function(aRule, aURI)
 	{
-		if (aRule.source.indexOf('/') < 0) {
+		if (this.RULE_WITH_SCHEME.test(aRule.source)) {
+			return aRule.test(aURI.spec);
+		}
+		else {
 			try {
 				return aRule.test(aURI.host);
 			}
 			catch(e) {
 				return false;
 			}
-		}
-		else {
-			return aRule.test(aURI.spec);
 		}
 	},
 
