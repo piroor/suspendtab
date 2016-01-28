@@ -1,7 +1,7 @@
 /**
  * @fileOverview Here-document module for restartless addons
  * @author       YUKI "Piro" Hiroshi
- * @version      2
+ * @version      3
  * @description  Inspired from https://github.com/cho45/node-here.js
  *
  * @license

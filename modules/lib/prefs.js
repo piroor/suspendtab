@@ -1,11 +1,3 @@
-var global = this;
-function shutdown()
-{
-	global.window = void(0);
-	global.prefs = void(0);
-	global = void(0);
-}
-
 /*
  Preferences Library
 
@@ -27,11 +19,18 @@ function shutdown()
    window['piro.sakura.ne.jp'].prefs.addPrefListener(listener);
    window['piro.sakura.ne.jp'].prefs.removePrefListener(listener);
 
- license: The MIT License, Copyright (c) 2009-2010 YUKI "Piro" Hiroshi
-   http://github.com/piroor/fxaddonlibs/blob/master/license.txt
+   // utility
+   var store = window['piro.sakura.ne.jp'].prefs.createStore('extensions.someextension.');
+   // property name/key, default value
+   store.define('enabled', true);
+   // property name, default value, pref key (different to the name)
+   store.define('leftMargin', true, 'margin.left');
+   var enabled = store.enabled;
+   store.destroy(); // free the memory.
+
+ license: The MIT License, Copyright (c) 2009-2013 YUKI "Piro" Hiroshi
  original:
-   http://github.com/piroor/fxaddonlibs/blob/master/prefs.js
-   http://github.com/piroor/fxaddonlibs/blob/master/prefs.test.js
+   http://github.com/piroor/fxaddonlib-prefs
 */
 
 /* To work as a JS Code Module  */
@@ -52,7 +51,7 @@ if (typeof window == 'undefined' ||
 }
 
 (function() {
-	const currentRevision = 7;
+	const currentRevision = 15;
 
 	if (!('piro.sakura.ne.jp' in window)) window['piro.sakura.ne.jp'] = {};
 
@@ -84,25 +83,41 @@ if (typeof window == 'undefined' ||
 
 			aBranch = aBranch || this.Prefs;
 
+			var type = aBranch.getPrefType(aPrefstring);
+			if (type == aBranch.PREF_INVALID)
+				return null;
+
 			if (aInterface)
-				return (aBranch.getPrefType(aPrefstring) == aBranch.PREF_INVALID) ?
-						null :
-						aBranch.getComplexValue(aPrefstring, aInterface);
+				return aBranch.getComplexValue(aPrefstring, aInterface);
 
-			switch (aBranch.getPrefType(aPrefstring))
-			{
-				case aBranch.PREF_STRING:
-					return decodeURIComponent(escape(aBranch.getCharPref(aPrefstring)));
+			try {
+				switch (type)
+				{
+					case aBranch.PREF_STRING:
+						return decodeURIComponent(escape(aBranch.getCharPref(aPrefstring)));
 
-				case aBranch.PREF_INT:
-					return aBranch.getIntPref(aPrefstring);
+					case aBranch.PREF_INT:
+						return aBranch.getIntPref(aPrefstring);
 
-				case aBranch.PREF_BOOL:
-					return aBranch.getBoolPref(aPrefstring);
+					case aBranch.PREF_BOOL:
+						return aBranch.getBoolPref(aPrefstring);
 
-				case aBranch.PREF_INVALID:
-				default:
-					return null;
+					case aBranch.PREF_INVALID:
+					default:
+						return null;
+				}
+			} catch(e) {
+				// getXXXPref can raise an error if it is the default branch.
+				return null;
+			}
+		},
+
+		getLocalizedPref : function(aPrefstring)
+		{
+			try {
+				return this.getPref(aPrefstring, Ci.nsIPrefLocalizedString).data;
+			} catch(e) {
+				return this.getPref(aPrefstring);
 			}
 		},
 
@@ -111,19 +126,36 @@ if (typeof window == 'undefined' ||
 			return this.getPref(aPrefstring, this.DefaultPrefs, aInterface);
 		},
 	 
-		setPref : function(aPrefstring, aNewValue, aBranch) 
+		setPref : function(aPrefstring, aNewValue) 
 		{
-			aBranch = aBranch || this.Prefs;
+			var branch = this.Prefs;
+			var interface = null;
+			if (arguments.length > 2) {
+				for (let i = 2; i < arguments.length; i++)
+				{
+					let arg = arguments[i];
+					if (!arg)
+						continue;
+					if (arg instanceof Ci.nsIPrefBranch)
+						branch = arg;
+					else
+						interface = arg;
+				}
+			}
+			if (interface &&
+				aNewValue instanceof Ci.nsISupports) {
+				return branch.setComplexValue(aPrefstring, interface, aNewValue);
+			}
 			switch (typeof aNewValue)
 			{
 				case 'string':
-					return aBranch.setCharPref(aPrefstring, unescape(encodeURIComponent(aNewValue)));
+					return branch.setCharPref(aPrefstring, unescape(encodeURIComponent(aNewValue)));
 
 				case 'number':
-					return aBranch.setIntPref(aPrefstring, parseInt(aNewValue));
+					return branch.setIntPref(aPrefstring, parseInt(aNewValue));
 
 				default:
-					return aBranch.setBoolPref(aPrefstring, !!aNewValue);
+					return branch.setBoolPref(aPrefstring, !!aNewValue);
 			}
 		},
 
@@ -146,13 +178,19 @@ if (typeof window == 'undefined' ||
 	 
 		getChildren : function(aRoot, aBranch) 
 		{
-			return this.getDescendant(aRoot, aBranch)
-					.filter(function(aPrefstring) {
-						var name = aPrefstring.replace(aRoot, '');
-						if (name.charAt(0) == '.')
-							name = name.substring(1);
-						return name.indexOf('.') < 0;
+			aRoot = aRoot.replace(/\.$/, '');
+			var foundChildren = {};
+			var possibleChildren = [];
+			this.getDescendant(aRoot, aBranch)
+					.forEach(function(aPrefstring) {
+						var name = aPrefstring.replace(aRoot + '.', '');
+							let possibleChildKey = aRoot + '.' + name.split('.')[0];
+							if (possibleChildKey && !(possibleChildKey in foundChildren)) {
+								possibleChildren.push(possibleChildKey);
+								foundChildren[possibleChildKey] = true;
+							}
 					});
+			return possibleChildren.sort();
 		},
 	 
 		addPrefListener : function(aObserver) 
@@ -175,6 +213,39 @@ if (typeof window == 'undefined' ||
 			}
 			catch(e) {
 			}
+		},
+
+		createStore : function(aDomain)
+		{
+			var listener = {
+				domain : aDomain,
+				observe : function(aSubject, aTopic, aData) {
+					if (aTopic != 'nsPref:changed')
+						return;
+					var name = keyToName[aData];
+					store[name] = window['piro.sakura.ne.jp'].prefs.getPref(aData);
+				}
+			};
+			this.addPrefListener(listener);
+			var keyToName = {};
+			var base = aDomain.replace(/\.$/, '') + '.';
+			var store = {
+				define : function(aName, aValue, aKey) {
+					aKey = base + (aKey || aName);
+					window['piro.sakura.ne.jp'].prefs.setDefaultPref(aKey, aValue);
+					this[aName] = window['piro.sakura.ne.jp'].prefs.getPref(aKey);
+					keyToName[aKey] = aName;
+				},
+				destroy : function() {
+					window['piro.sakura.ne.jp'].prefs.removePrefListener(listener);
+					aDomain = undefined;
+					base = undefined;
+					listener = undefined;
+					keyToName = undefined;
+					store = undefined;
+				}
+			};
+			return store;
 		}
 	};
 })();
