@@ -459,8 +459,6 @@ SuspendTabInternal.instances = [];
 function shutdown(aReason)
 {
 	SuspendTabInternal.instances.forEach(function(aInstance) {
-		if (aReason == 'ADDON_DISABLE')
-			aInstance.resumeAll(true);
 		aInstance.destroy();
 	});
 
