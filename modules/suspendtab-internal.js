@@ -242,6 +242,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		// Because Firefox sets the default favicon on this event loop,
 		// we have to reset the favicon in the next loop.
 		setTimeout((function() {
+			if (!aTab.parentNode)
+				return;
 			if (this.debug)
 				dump(' => set icon '+icon+'\n');
 			this.browser.setIcon(aTab, icon, aTab.linkedBrowser.contentPrincipal);
@@ -299,6 +301,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 					tab.removeAttribute(this.SUSPENDED);
 				if (!tab.selected && tab.__suspendtab__suspendAfterLoad) {
 					setTimeout((function() {
+						if (!tab.parentNode)
+							return;
 						delete tab.__suspendtab__suspendAfterLoad;
 						this.suspend(tab);
 					}).bind(this), 500);

@@ -622,6 +622,8 @@ SuspendTab.prototype = inherit(require('const'), {
 
 		aTab.__suspendtab__timestamp = timestamp || now;
 		aTab.__suspendtab__timer = setTimeout((function() {
+			if (!aTab.parentNode)
+				return;
 			aTab.__suspendtab__timestamp = 0;
 			aTab.__suspendtab__timer = null;
 			if (!aTab.selected && this.autoSuspend)
@@ -679,20 +681,20 @@ SuspendTab.prototype = inherit(require('const'), {
 	reserveGC : function()
 	{
 		if (this.GCTimer) return;
-		this.GCTimer = setTimeout(function(aSelf) {
-			aSelf.GCTimer= null;
+		this.GCTimer = setTimeout((function() {
+			this.GCTimer= null;
 
 			Cu.forceGC();
 			Services.obs.notifyObservers(null, 'child-gc-request', null);
 
-			var utils = aSelf.window
+			var utils = this.window
 						.QueryInterface(Ci.nsIInterfaceRequestor)
 						.getInterface(Ci.nsIDOMWindowUtils);
 			if (utils.cycleCollect) {
 				utils.cycleCollect();
 				Services.obs.notifyObservers(null, 'child-cc-request', null);
 			}
-		}, 0, this);
+		}).bind(this), 0);
 	},
 
 	init : function(aWindow)
