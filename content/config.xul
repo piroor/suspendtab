@@ -93,10 +93,8 @@
 		</hbox>
 		<hbox align="center">
 			<spacer style="width:1em;"/>
-			<vbox>
-				<checkbox label="&autoSuspend.resetOnReload;"
-					preference="autoSuspend.resetOnReload"/>
-			</vbox>
+			<checkbox label="&autoSuspend.resetOnReload;"
+				preference="autoSuspend.resetOnReload"/>
 		</hbox>
 		<checkbox label="&autoSuspend.newBackgroundTab;"
 			preference="autoSuspend.newBackgroundTab"/>
