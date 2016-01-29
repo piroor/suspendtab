@@ -177,7 +177,7 @@ SuspendTab.prototype = inherit(require('const'), {
 			case this.domain + 'autoSuspend.enabled':
 			case this.domain + 'autoSuspend.timeout':
 			case this.domain + 'autoSuspend.timeout.factor':
-				return this.setTimers(true);
+				return this.trySuspendBackgroundTabs(true);
 		}
 	},
 
@@ -442,7 +442,7 @@ SuspendTab.prototype = inherit(require('const'), {
 			dump('tab '+tab._tPos+' is selected.\n');
 		this.cancelTimer(tab);
 		this.resume(tab);
-		this.setTimers();
+		this.trySuspendBackgroundTabs();
 		tab.__suspendtab__lastFocused = Date.now();
 	},
 
@@ -496,16 +496,15 @@ SuspendTab.prototype = inherit(require('const'), {
 		}
 	},
 
-	setTimers : function(aReset)
+	trySuspendBackgroundTabs : function(aReset)
 	{
 		Array.forEach(this.tabs, function(aTab) {
-			if (aTab.__suspendtab__timer && !aReset)
-				return;
-
+			if (!aTab.__suspendtab__timer || aReset) {
 			if (this.autoSuspend)
 				this.reserveSuspend(aTab);
 			else if (aReset)
 				this.cancelTimer(aTab);
+			}
 		}, this);
 	},
 
@@ -680,7 +679,7 @@ SuspendTab.prototype = inherit(require('const'), {
 		this.browser.addEventListener('DOMTitleChanged', this, true);
 		this.document.addEventListener(this.EVENT_TYPE_DISABLED, this, true);
 
-		this.setTimers();
+		this.trySuspendBackgroundTabs();
 
 		prefs.addPrefListener(this);
 
