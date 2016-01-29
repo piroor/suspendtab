@@ -529,7 +529,9 @@ SuspendTab.prototype = inherit(require('const'), {
 			if (!this.browser.selectedTab.pinned)
 				tabsOnMemory--; // decrement at first, for the current tab!
 		}
-		tabs.forEach(function(aTab, aIndex) {
+		tabs.forEach(function(aTab) {
+			if (this.isSuspended(aTab) && !aReset)
+				return;
 			if (
 				!aTab.__suspendtab__timer ||
 				aReset ||
