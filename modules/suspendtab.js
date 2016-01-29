@@ -850,7 +850,7 @@ SuspendTab.prototype = inherit(require('const'), {
 			'contentContextAddDomainExceptionItem'
 		].forEach(function(aKey) {
 			this[aKey].removeEventListener('command', this, false);
-			this[aKey].removeChild(this[aKey]);
+			this[aKey].parentNode.removeChild(this[aKey]);
 			delete this[aKey];
 		}, this);
 
