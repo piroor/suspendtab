@@ -102,10 +102,6 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 	{
 		return this.window.gBrowser;
 	},
-	get tabs()
-	{
-		return this.browser.mTabContainer.childNodes;
-	},
 
 	init : function(aWindow)
 	{
@@ -454,16 +450,6 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		aTab[this.READY] = true;
 
 		return true;
-	},
-
-	resumeAll : function(aRestoreOnlySuspendedByMe)
-	{
-		Array.forEach(this.tabs, function(aTab) {
-			this.cancelTimer(aTab);
-			if (!aRestoreOnlySuspendedByMe ||
-				aTab.getAttribute(this.SUSPENDED) == 'true')
-				this.resume(aTab);
-		}, this);
 	}
 });
 SuspendTabInternal.isAvailable = isInternalAPIsAvailable;
@@ -473,8 +459,6 @@ SuspendTabInternal.instances = [];
 function shutdown(aReason)
 {
 	SuspendTabInternal.instances.forEach(function(aInstance) {
-		if (aReason == 'ADDON_DISABLE')
-			aInstance.resumeAll(true);
 		aInstance.destroy();
 	});
 
