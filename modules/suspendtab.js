@@ -632,12 +632,7 @@ SuspendTab.prototype = inherit(require('const'), {
 
 	resumeAll : function(aRestoreOnlySuspendedByMe)
 	{
-		Array.forEach(this.tabs, function(aTab) {
-			this.cancelTimer(aTab);
-			if (!aRestoreOnlySuspendedByMe ||
-				aTab.getAttribute(this.SUSPENDED) == 'true')
-				this.resume(aTab);
-		}, this);
+		this.internal.resumeAll(aRestoreOnlySuspendedByMe);
 	},
 
 	reserveGC : function()
