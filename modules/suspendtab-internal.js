@@ -147,7 +147,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 //			TabRestoreStates.has(browser))
 //			return TabRestoreStates.isNeedsRestore(browser);
 
-		return browser.__SS_restoreState == 1;
+		return browser && browser.__SS_restoreState == 1;
 	},
 
 	suspend : function(aTab, aOptions)
