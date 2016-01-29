@@ -103,7 +103,9 @@ SuspendTab.prototype = inherit(require('const'), {
 	{
 		var tabs = Array.slice(this.tabs, 0);
 		return tabs.sort(function(aA, aB) {
-			return (aA.__suspendtab__lastFocused || 0) - (aB.__suspendtab__lastFocused || 0);
+			var a = aA.__suspendtab__lastFocused || aA.__suspendtab__openedAt || 0;
+			var b = aB.__suspendtab__lastFocused || aB.__suspendtab__openedAt || 0;
+			return a - b;
 		});
 	},
 	get tabsFromNewToOld()
@@ -436,11 +438,9 @@ SuspendTab.prototype = inherit(require('const'), {
 
 	onTabOpen : function(aEvent)
 	{
-		if (!this.autoSuspendNewBackgroundTab)
-			return;
-
 		var tab = aEvent.originalTarget;
-
+		tab.__suspendtab__openedAt = Date.now();
+		if (this.autoSuspendNewBackgroundTab) {
 		if (!tab.selected &&
 			this.autoSuspendNewBackgroundTabAfterLoad)
 			tab.__suspendtab__suspendAfterLoad = true;
@@ -452,6 +452,10 @@ SuspendTab.prototype = inherit(require('const'), {
 			if (!this.autoSuspendNewBackgroundTabAfterLoad)
 				this.suspend(tab, { newTabNotLoadedYet : true });
 		}).bind(this), 0);
+		}
+		else {
+			this.trySuspendBackgroundTabs();
+		}
 	},
 
 	onTabSelect : function(aEvent)
