@@ -500,10 +500,10 @@ SuspendTab.prototype = inherit(require('const'), {
 	{
 		Array.forEach(this.tabs, function(aTab) {
 			if (!aTab.__suspendtab__timer || aReset) {
-			if (this.autoSuspend)
-				this.reserveSuspend(aTab);
-			else if (aReset)
-				this.cancelTimer(aTab);
+				if (this.autoSuspend)
+					this.reserveSuspend(aTab);
+				else if (aReset)
+					this.cancelTimer(aTab);
 			}
 		}, this);
 	},
