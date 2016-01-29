@@ -84,6 +84,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 	MESSAGE_TYPE: 'suspendtab@piro.sakura.ne.jp',
 	SCRIPT_URL: 'chrome://suspendtab/content/content-utils.js',
 
+	destroyed : false,
+
 	get debug()
 	{
 		return prefs.getPref(this.domain + 'debug');
@@ -115,6 +117,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 	destroy : function(aWindow)
 	{
+		this.destroyed = true;
+
 		this.window.messageManager.broadcastAsyncMessage(this.MESSAGE_TYPE, {
 			command : 'shutdown'
 		});

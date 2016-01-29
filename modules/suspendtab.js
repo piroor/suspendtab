@@ -868,7 +868,11 @@ SuspendTab.prototype = inherit(require('const'), {
 
 	isSuspended : function(aTab)
 	{
-		return this.internal.isSuspended(aTab);
+		return (
+			this.internal &&
+			!this.internal.destroyed &&
+			this.internal.isSuspended(aTab)
+		);
 	},
 
 	suspend : function(aTab, aOptions)
@@ -876,7 +880,9 @@ SuspendTab.prototype = inherit(require('const'), {
 		if (this.isSuspended(aTab))
 			return true;
 
-		if (!this.internal.suspend(aTab, aOptions))
+		if (this.internal &&
+			!this.internal.destroyed &&
+			!this.internal.suspend(aTab, aOptions))
 			return false;
 
 		if (aTab.selected) {
@@ -891,7 +897,9 @@ SuspendTab.prototype = inherit(require('const'), {
 
 	resume : function(aTabs)
 	{
-		this.internal.resume(aTabs);
+		this.internal &&
+			!this.internal.destroyed &&
+				this.internal.resume(aTabs);
 	}
 });
 
