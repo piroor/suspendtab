@@ -588,12 +588,12 @@ SuspendTab.prototype = inherit(require('const'), {
 		}
 
 		aTab.__suspendtab__timestamp = timestamp || now;
-		aTab.__suspendtab__timer = setTimeout(function(aSelf) {
+		aTab.__suspendtab__timer = setTimeout((function() {
 			aTab.__suspendtab__timestamp = 0;
 			aTab.__suspendtab__timer = null;
-			if (aSelf.autoSuspend)
-				aSelf.suspend(aTab);
-		}, this.autoSuspendTimeout, this)
+			if (!aTab.selected && this.autoSuspend)
+				this.suspend(aTab);
+		}).bind(this), this.autoSuspendTimeout)
 
 		this.updateTooltip(aTab);
 	},
