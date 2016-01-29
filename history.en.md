@@ -9,6 +9,7 @@
    * Next focused tab after the current tab is suspended is now configurable.
    * Newly opened background tabs can be suspended by default.
    * Features are available from the context menu on the contents area.
+   * Provide ability to limit the number of on-memory tabs.
  - 0.2.2014050201
    * Works on Firefox 29 and Nightly 32.0a1.
    * Drop support for Firefox 25, 26, 27 and 28.

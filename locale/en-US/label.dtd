@@ -44,6 +44,8 @@
 <!ENTITY autoSuspend.timeout.factor.seconds "seconds">
 <!ENTITY autoSuspend.timeout.factor.milliseconds "milli seconds">
 <!ENTITY autoSuspend.timeout.after "past">
+<!ENTITY autoSuspend.tooManyTabs "Suspend tabs older than ">
+<!ENTITY autoSuspend.tooManyTabs.maxTabsOnMemory.after "tabs recently seen">
 <!ENTITY autoSuspend.resetOnReload "Don't suspend if the tab is reloaded">
 
 <!ENTITY tab.blockList "Exceptions">

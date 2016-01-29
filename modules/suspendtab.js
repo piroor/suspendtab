@@ -70,6 +70,14 @@ SuspendTab.prototype = inherit(require('const'), {
 	{
 		return prefs.getPref(this.domain + 'autoSuspend.resetOnReload');
 	},
+	get autoSuspendTooManyTabs()
+	{
+		return prefs.getPref(this.domain + 'autoSuspend.tooManyTabs');
+	},
+	get maxTabsOnMemory()
+	{
+		return prefs.getPref(this.domain + 'autoSuspend.tooManyTabs.maxTabsOnMemory');
+	},
 	get autoSuspendNewBackgroundTab()
 	{
 		return prefs.getPref(this.domain + 'autoSuspend.newBackgroundTab');
@@ -90,6 +98,17 @@ SuspendTab.prototype = inherit(require('const'), {
 	get tabs()
 	{
 		return this.browser.mTabContainer.childNodes;
+	},
+	get tabsFromOldToNew()
+	{
+		var tabs = Array.slice(this.tabs, 0);
+		return tabs.sort(function(aA, aB) {
+			return (aA.__suspendtab__lastFocused || 0) - (aB.__suspendtab__lastFocused || 0);
+		});
+	},
+	get tabsFromNewToOld()
+	{
+		return this.tabsFromOldToNew.reverse();
 	},
 	get tabContextPopup()
 	{
@@ -177,6 +196,8 @@ SuspendTab.prototype = inherit(require('const'), {
 			case this.domain + 'autoSuspend.enabled':
 			case this.domain + 'autoSuspend.timeout':
 			case this.domain + 'autoSuspend.timeout.factor':
+			case this.domain + 'autoSuspend.tooManyTabs':
+			case this.domain + 'autoSuspend.tooManyTabs.maxTabsOnMemory':
 				return this.trySuspendBackgroundTabs(true);
 		}
 	},
@@ -362,10 +383,8 @@ SuspendTab.prototype = inherit(require('const'), {
 				return tabs[index];
 
 			case this.NEXT_FOCUS_PREVIOUSLY_FOCUSED:
-				tabs.sort(function(aA, aB) {
-					return (aA.__suspendtab__lastFocused || 0) - (aB.__suspendtab__lastFocused || 0);
-				});
-				index = Array.slice(tabs).indexOf(aTab);
+				tabs = this.tabsFromOldToNew;
+				index = tabs.indexOf(aTab);
 				if (index == 0)
 					return tabs[1];
 			case this.NEXT_FOCUS_PRECEDING:
@@ -491,19 +510,40 @@ SuspendTab.prototype = inherit(require('const'), {
 			}
 		}
 		else {
-			if (this.autoSuspendResetOnReload && !tab.selected)
+			if (
+				!aTab.pinned &&
+				this.autoSuspendResetOnReload &&
+				!tab.selected
+				)
 				this.reserveSuspend(tab);
 		}
 	},
 
 	trySuspendBackgroundTabs : function(aReset)
 	{
-		Array.forEach(this.tabs, function(aTab) {
-			if (!aTab.__suspendtab__timer || aReset) {
-				if (this.autoSuspend)
+		var tabs = Array.slice(this.tabs, 0);
+		var tabsOnMemory = tabs.length;
+		if (this.autoSuspendTooManyTabs) {
+			tabs = this.tabsFromNewToOld;
+			tabsOnMemory = this.maxTabsOnMemory;
+			if (!this.browser.selectedTab.pinned)
+				tabsOnMemory--; // decrement at first, for the current tab!
+		}
+		tabs.forEach(function(aTab, aIndex) {
+			if (
+				!aTab.__suspendtab__timer ||
+				aReset ||
+				aTab.pinned
+				) {
+				if (!aTab.pinned && this.autoSuspend)
 					this.reserveSuspend(aTab);
-				else if (aReset)
+				else if (aTab.pinned || aReset)
 					this.cancelTimer(aTab);
+			}
+			if (!aTab.pinned && !aTab.selected) {
+				tabsOnMemory--;
+				if (tabsOnMemory < 0)
+					this.suspend(aTab);
 			}
 		}, this);
 	},

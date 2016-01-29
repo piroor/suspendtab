@@ -295,6 +295,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 				return;
 
 			case 'loaded':
+				if (tab.getAttribute('pending') != 'true')
+					tab.removeAttribute(this.SUSPENDED);
 				if (!tab.selected && tab.__suspendtab__suspendAfterLoad) {
 					setTimeout((function() {
 						delete tab.__suspendtab__suspendAfterLoad;

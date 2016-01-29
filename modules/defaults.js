@@ -41,6 +41,8 @@ var domain = SuspendTabConst.domain;
 prefs.setDefaultPref(domain+'autoSuspend.enabled', true);
 prefs.setDefaultPref(domain+'autoSuspend.timeout', 30);
 prefs.setDefaultPref(domain+'autoSuspend.timeout.factor', 1000 * 60);
+prefs.setDefaultPref(domain+'autoSuspend.tooManyTabs', false);
+prefs.setDefaultPref(domain+'autoSuspend.tooManyTabs.maxTabsOnMemory', 10);
 prefs.setDefaultPref(domain+'autoSuspend.blockList', '');
 prefs.setDefaultPref(domain+'autoSuspend.resetOnReload', true);
 prefs.setDefaultPref(domain+'autoSuspend.newBackgroundTab', false);

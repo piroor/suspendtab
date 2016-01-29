@@ -57,6 +57,12 @@
 			<preference id="autoSuspend.resetOnReload"
 				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.resetOnReload"
 				type="bool"/>
+			<preference id="autoSuspend.tooManyTabs"
+				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.tooManyTabs"
+				type="bool"/>
+			<preference id="autoSuspend.tooManyTabs.maxTabsOnMemory"
+				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.tooManyTabs.maxTabsOnMemory"
+				type="int"/>
 			<preference id="autoSuspend.newBackgroundTab"
 				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.newBackgroundTab"
 				type="bool"/>
@@ -95,6 +101,18 @@
 			<spacer style="width:1em;"/>
 			<checkbox label="&autoSuspend.resetOnReload;"
 				preference="autoSuspend.resetOnReload"/>
+		</hbox>
+		<hbox align="center">
+			<checkbox label="&autoSuspend.tooManyTabs;"
+				preference="autoSuspend.tooManyTabs"/>
+			<textbox id="autoSuspend.tooManyTabs.maxTabsOnMemory-textbox"
+				preference="autoSuspend.tooManyTabs.maxTabsOnMemory"
+				type="number"
+				size="3"
+				min="0"
+				increment="1"/>
+			<label value="&autoSuspend.tooManyTabs.maxTabsOnMemory.after;"
+				control="autoSuspend.tooManyTabs.maxTabsOnMemory-textbox"/>
 		</hbox>
 		<checkbox label="&autoSuspend.newBackgroundTab;"
 			preference="autoSuspend.newBackgroundTab"/>

@@ -44,6 +44,8 @@
 <!ENTITY autoSuspend.timeout.factor.seconds "秒">
 <!ENTITY autoSuspend.timeout.factor.milliseconds "ミリ秒">
 <!ENTITY autoSuspend.timeout.after "以上経過したらタブをサスペンドする">
+<!ENTITY autoSuspend.tooManyTabs "最近見た">
+<!ENTITY autoSuspend.tooManyTabs.maxTabsOnMemory.after "タブよりも古いタブは自動的にサスペンドする">
 <!ENTITY autoSuspend.resetOnReload "一定時間以上見ていないタブでも、再読み込みされた場合はサスペンドしない">
 
 <!ENTITY tab.blockList "例外">
