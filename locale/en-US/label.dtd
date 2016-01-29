@@ -45,6 +45,8 @@
 <!ENTITY autoSuspend.timeout.factor.milliseconds "milli seconds">
 <!ENTITY autoSuspend.timeout.after "past">
 <!ENTITY autoSuspend.resetOnReload "Don't suspend if the tab is reloaded">
+
+<!ENTITY tab.blockList "Exceptions">
 <!ENTITY autoSuspend.blockList.caption "Don't suspend tabs for these pages:">
 <!ENTITY autoSuspend.blockList.description1 "You can specify multiple domains separated by line breaks.">
 <!ENTITY autoSuspend.blockList.description2 "Available wildcatds: ?=any one letter, *=0 or more any letters">

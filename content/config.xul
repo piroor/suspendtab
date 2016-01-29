@@ -57,9 +57,6 @@
 			<preference id="autoSuspend.resetOnReload"
 				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.resetOnReload"
 				type="bool"/>
-			<preference id="autoSuspend.blockList"
-				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.blockList"
-				type="string"/>
 			<preference id="autoSuspend.newBackgroundTab"
 				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.newBackgroundTab"
 				type="bool"/>
@@ -99,27 +96,6 @@
 			<vbox>
 				<checkbox label="&autoSuspend.resetOnReload;"
 					preference="autoSuspend.resetOnReload"/>
-				<groupbox orient="vertical">
-					<caption label="&autoSuspend.blockList.caption;"/>
-					<textbox id="autoSuspend.blockList-textbox"
-						preference="autoSuspend.blockList"
-						multiline="true"
-						rows="5"
-						onsyncfrompreference="
-							var pref = document.getElementById('autoSuspend.blockList');
-							return pref.value.replace(/^\s+|\s+$/g, '').replace(/\s+/g, '\n');
-						"
-						onsynctopreference="
-							var textbox = document.getElementById('autoSuspend.blockList-textbox');
-							return textbox.value.replace(/^\s+|\s+$/g, '').replace(/\s+/g, ' ');
-						"/>
-					<description value="&autoSuspend.blockList.description1;"
-						control="autoSuspend.blockList-textbox"/>
-					<description value="&autoSuspend.blockList.description2;"
-						control="autoSuspend.blockList-textbox"/>
-					<description value="&autoSuspend.blockList.description3;"
-						control="autoSuspend.blockList-textbox"/>
-				</groupbox>
 			</vbox>
 		</hbox>
 		<checkbox label="&autoSuspend.newBackgroundTab;"
@@ -129,6 +105,36 @@
 			<checkbox label="&autoSuspend.newBackgroundTab.afterLoad;"
 				preference="autoSuspend.newBackgroundTab.afterLoad"/>
 		</hbox>
+	</prefpane>
+
+	<prefpane id="prefpane-blockList"
+		label="&tab.blockList;">
+		<preferences>
+			<preference id="autoSuspend.blockList"
+				name="extensions.suspendtab@piro.sakura.ne.jp.autoSuspend.blockList"
+				type="string"/>
+		</preferences>
+		<groupbox orient="vertical">
+			<caption label="&autoSuspend.blockList.caption;"/>
+			<textbox id="autoSuspend.blockList-textbox"
+				preference="autoSuspend.blockList"
+				multiline="true"
+				rows="5"
+				onsyncfrompreference="
+					var pref = document.getElementById('autoSuspend.blockList');
+					return pref.value.replace(/^\s+|\s+$/g, '').replace(/\s+/g, '\n');
+				"
+				onsynctopreference="
+					var textbox = document.getElementById('autoSuspend.blockList-textbox');
+					return textbox.value.replace(/^\s+|\s+$/g, '').replace(/\s+/g, ' ');
+				"/>
+			<description value="&autoSuspend.blockList.description1;"
+				control="autoSuspend.blockList-textbox"/>
+			<description value="&autoSuspend.blockList.description2;"
+				control="autoSuspend.blockList-textbox"/>
+			<description value="&autoSuspend.blockList.description3;"
+				control="autoSuspend.blockList-textbox"/>
+		</groupbox>
 	</prefpane>
 
 	<prefpane id="prefpane-focus"

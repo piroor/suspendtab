@@ -45,6 +45,8 @@
 <!ENTITY autoSuspend.timeout.factor.milliseconds "ミリ秒">
 <!ENTITY autoSuspend.timeout.after "以上経過したらタブをサスペンドする">
 <!ENTITY autoSuspend.resetOnReload "一定時間以上見ていないタブでも、再読み込みされた場合はサスペンドしない">
+
+<!ENTITY tab.blockList "例外">
 <!ENTITY autoSuspend.blockList.caption "以下のページを開いているタブは自動的にサスペンドしない">
 <!ENTITY autoSuspend.blockList.description1 "改行区切りで複数のドメインまたはURIを指定できます。">
 <!ENTITY autoSuspend.blockList.description2 "利用可能なワイルドカード： ?=任意の1文字, *=0個以上の任意の文字">
