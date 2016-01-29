@@ -441,17 +441,17 @@ SuspendTab.prototype = inherit(require('const'), {
 		var tab = aEvent.originalTarget;
 		tab.__suspendtab__openedAt = Date.now();
 		if (this.autoSuspendNewBackgroundTab) {
-		if (!tab.selected &&
-			this.autoSuspendNewBackgroundTabAfterLoad)
-			tab.__suspendtab__suspendAfterLoad = true;
+			if (!tab.selected &&
+				this.autoSuspendNewBackgroundTabAfterLoad)
+				tab.__suspendtab__suspendAfterLoad = true;
 
-		setTimeout((function() {
-			if (!tab.parentNode || tab.selected)
-				return;
+			setTimeout((function() {
+				if (!tab.parentNode || tab.selected)
+					return;
 
-			if (!this.autoSuspendNewBackgroundTabAfterLoad)
-				this.suspend(tab, { newTabNotLoadedYet : true });
-		}).bind(this), 0);
+				if (!this.autoSuspendNewBackgroundTabAfterLoad)
+					this.suspend(tab, { newTabNotLoadedYet : true });
+			}).bind(this), 0);
 		}
 		else {
 			this.trySuspendBackgroundTabs();
