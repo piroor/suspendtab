@@ -159,6 +159,9 @@ SuspendTab.prototype = inherit(require('const'), {
 
 			case 'unload':
 				return this.destroy();
+
+			case this.EVENT_TYPE_DISABLED:
+				return this.resumeAll(true);
 		}
 	},
 
@@ -675,6 +678,7 @@ SuspendTab.prototype = inherit(require('const'), {
 		this.window.addEventListener('SSTabRestored', this, true);
 		this.browser.addEventListener('load', this, true);
 		this.browser.addEventListener('DOMTitleChanged', this, true);
+		this.document.addEventListener(this.EVENT_TYPE_DISABLED, this, true);
 
 		this.setTimers();
 
@@ -825,6 +829,7 @@ SuspendTab.prototype = inherit(require('const'), {
 			this.window.removeEventListener('SSTabRestored', this, true);
 			this.browser.removeEventListener('load', this, true);
 			this.browser.removeEventListener('DOMTitleChanged', this, true);
+			this.document.removeEventListener(this.EVENT_TYPE_DISABLED, this, true);
 
 			delete this.window;
 		}

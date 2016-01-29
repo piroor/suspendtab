@@ -115,8 +115,14 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		this.window.messageManager.loadFrameScript(this.SCRIPT_URL, true);
 	},
 
-	destroy : function(aWindow)
+	destroy : function(aIsGoingToBeDisabled)
 	{
+		if (aIsGoingToBeDisabled) {
+			let event = this.document.createEvent('Events');
+			event.initEvent(this.EVENT_TYPE_DISABLED, true, false);
+			this.document.dispatchEvent(event);
+		}
+
 		this.destroyed = true;
 
 		this.window.messageManager.broadcastAsyncMessage(this.MESSAGE_TYPE, {
@@ -463,7 +469,7 @@ SuspendTabInternal.instances = [];
 function shutdown(aReason)
 {
 	SuspendTabInternal.instances.forEach(function(aInstance) {
-		aInstance.destroy();
+		aInstance.destroy(aReason == 'ADDON_DISABLE');
 	});
 
 	setTimeout = clearTimeout = undefined;

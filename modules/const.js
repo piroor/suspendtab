@@ -14,7 +14,7 @@
  * The Original Code is Suspend Tab.
  *
  * The Initial Developer of the Original Code is YUKI "Piro" Hiroshi.
- * Portions created by the Initial Developer are Copyright (C) 2012-2014
+ * Portions created by the Initial Developer are Copyright (C) 2012-2016
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):: YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
@@ -48,6 +48,7 @@ var exports = {
 	EVENT_TYPE_SUSPENDED  : 'TabSuspended',
 	EVENT_TYPE_RESUMING   : 'TabResuming',
 	EVENT_TYPE_RESUMED    : 'TabResumed',
+	EVENT_TYPE_DISABLED   : 'SuspendTabDisabled',
 
 	NEXT_FOCUS_AUTO      : -1,
 	NEXT_FOCUS_PRECEDING : 0,
