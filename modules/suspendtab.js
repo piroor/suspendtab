@@ -515,7 +515,7 @@ SuspendTab.prototype = inherit(require('const'), {
 		}
 		else {
 			if (
-				!aTab.pinned &&
+				!tab.pinned &&
 				this.autoSuspendResetOnReload &&
 				!tab.selected
 				)
