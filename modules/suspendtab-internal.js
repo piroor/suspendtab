@@ -98,6 +98,14 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 	{
 		return this.window.document;
 	},
+	get browser()
+	{
+		return this.window.gBrowser;
+	},
+	get tabs()
+	{
+		return this.browser.mTabContainer.childNodes;
+	},
 
 	init : function(aWindow)
 	{
@@ -230,7 +238,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		setTimeout((function() {
 			if (this.debug)
 				dump(' => set icon '+icon+'\n');
-			this.window.gBrowser.setIcon(aTab, icon, aTab.linkedBrowser.contentPrincipal);
+			this.browser.setIcon(aTab, icon, aTab.linkedBrowser.contentPrincipal);
 		}).bind(this), 0);
 
 		aTab.setAttribute('pending', true);
@@ -259,7 +267,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 		var tab;
 		try {
-			tab = this.window.gBrowser.getTabForBrowser(aMessage.target);
+			tab = this.browser.getTabForBrowser(aMessage.target);
 		}
 		catch(e) {
 			dump(e + '\n');
@@ -380,7 +388,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 			return true;
 
 		var browser = aTab.linkedBrowser;
-		var tabbrowser = this.window.gBrowser;
+		var tabbrowser = this.browser;
 
 
 		// ==BEGIN==
