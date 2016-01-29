@@ -414,10 +414,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		// attribute so that it runs in a content process.
 		let activePageData = state.entries[activeIndex] || null;
 		let uri = activePageData ? activePageData.url || null : null;
-		if (typeof tabbrowser.updateBrowserRemotenessByURL == 'function') // Firefox 33 and later
-			tabbrowser.updateBrowserRemotenessByURL(browser, uri);
-		else // Firefox 32 or older
-			tabbrowser.updateBrowserRemoteness(browser, uri);
+		tabbrowser.updateBrowserRemotenessByURL(browser, uri);
 
 		// Start a new epoch and include the epoch in the restoreHistory
 		// message. If a message is received that relates to a previous epoch, we
@@ -448,7 +445,6 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 			// This information is only needed until the tab has finished restoring.
 			// When that's done it will be removed from the cache and we always
 			// collect it in TabState._collectBaseTabData().
-			// See also: https://github.com/piroor/suspendtab/issues/43#issuecomment-176325115
 			image: state.image || '',
 			userTypedValue: state.userTypedValue || '',
 			userTypedClear: state.userTypedClear || 0
