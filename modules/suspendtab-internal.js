@@ -192,6 +192,9 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 	},
 	suspendPostProcess : function(aTab, aOptions)
 	{
+		if (!aTab.parentNode)
+			return;
+
 		var label   = aTab.label;
 		var browser = aTab.linkedBrowser;
 		var wasBusy = aTab.getAttribute('busy') == 'true';
