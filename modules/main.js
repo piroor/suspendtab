@@ -36,6 +36,7 @@
 load('lib/WindowManager');
 
 load('defaults');
+load('suspendtab-internal'); // load this before "suspendtab", to shutdown "suspendtab-internal" after "suspendtab".
 load('suspendtab');
 
 const TYPE_BROWSER = 'navigator:browser';
