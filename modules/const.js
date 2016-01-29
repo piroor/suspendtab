@@ -49,6 +49,7 @@ var exports = {
 	EVENT_TYPE_RESUMING   : 'TabResuming',
 	EVENT_TYPE_RESUMED    : 'TabResumed',
 	EVENT_TYPE_DISABLED   : 'SuspendTabDisabled',
+	EVENT_TYPE_TAB_LOADED : 'SuspendTabContentLoaded',
 
 	NEXT_FOCUS_AUTO      : -1,
 	NEXT_FOCUS_PRECEDING : 0,

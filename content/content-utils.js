@@ -65,6 +65,7 @@
 		});
 	}
 	global.addEventListener('load', onContentLoaded, true);
+	global.addEventListener('DOMTitleChanged', onContentLoaded, true);
 
 	function handleMessage(aMessage)
 	{
@@ -79,6 +80,7 @@
 			case 'shutdown':
 				global.removeMessageListener(MESSAGE_TYPE, handleMessage);
 				global.removeEventListener('load', onContentLoaded, true);
+				global.removeEventListener('DOMTitleChanged', onContentLoaded, true);
 				free();
 				return;
 		}

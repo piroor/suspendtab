@@ -174,9 +174,8 @@ SuspendTab.prototype = inherit(require('const'), {
 			case 'SSTabRestored':
 				return this.onTabRestored(aEvent);
 
-			case 'DOMTitleChanged':
-			case 'load':
-				return this.onReloaded(aEvent);
+			case this.EVENT_TYPE_TAB_LOADED:
+				return this.handleReloadedTab(aEvent.originalTarget);
 
 			case 'unload':
 				return this.destroy();
@@ -481,45 +480,34 @@ SuspendTab.prototype = inherit(require('const'), {
 	 *  2. When a normal tab is reloaded, cancel (and reset)
 	 *     the timer of "auto suspend".
 	 */
-	onReloaded : function(aEvent)
+	handleReloadedTab : function(aTab)
 	{
-		var w = aEvent.target.defaultView.top;
-		var possiblySuspended = w.location.href == 'about:blank';
+		var possiblySuspended = aTab.linkedBrowser.currentURI.spec == 'about:blank';
 		if (!this.autoSuspendResetOnReload && !possiblySuspended)
 			return;
 
-		var tab;
-		if (!Array.some(this.tabs, function(aTab) {
-				if (aTab.linkedBrowser.contentWindow != w)
-					return false;
-
-				tab = aTab;
-				return true;
-			}, this))
-			return;
-
-		if (this.isSuspended(tab)) {
-			let options = this.internal.getTabOptions(tab);
+		if (this.isSuspended(aTab)) {
+			let options = this.internal.getTabOptions(aTab);
 			if (
 				possiblySuspended &&
 				// The blank page is loaded when it is suspended too.
 				// We have to handle only "reloading of already suspended" tab,
 				// in other words, we must ignore "just now suspended" tab.
-				tab.hasAttribute('pending')
+				aTab.hasAttribute('pending')
 				) {
 				if (options && options.label)
-					tab.visibleLabel = tab.label = options.label;
+					aTab.visibleLabel = aTab.label = options.label;
 				if (!options || !options.newTabNotLoadedYet)
-					this.resume(tab);
+					this.resume(aTab);
 			}
 		}
 		else {
 			if (
-				!tab.pinned &&
+				!aTab.pinned &&
 				this.autoSuspendResetOnReload &&
-				!tab.selected
+				!aTab.selected
 				)
-				this.reserveSuspend(tab);
+				this.reserveSuspend(aTab);
 		}
 	},
 
@@ -721,8 +709,7 @@ SuspendTab.prototype = inherit(require('const'), {
 		this.window.addEventListener('TabSelect', this, true);
 		this.window.addEventListener('SSTabRestoring', this, true);
 		this.window.addEventListener('SSTabRestored', this, true);
-		this.browser.addEventListener('load', this, true);
-		this.browser.addEventListener('DOMTitleChanged', this, true);
+		this.window.addEventListener(this.EVENT_TYPE_TAB_LOADED, this, true);
 		this.document.addEventListener(this.EVENT_TYPE_DISABLED, this, true);
 
 		this.trySuspendBackgroundTabs();
@@ -872,8 +859,7 @@ SuspendTab.prototype = inherit(require('const'), {
 			this.window.removeEventListener('TabSelect', this, true);
 			this.window.removeEventListener('SSTabRestoring', this, true);
 			this.window.removeEventListener('SSTabRestored', this, true);
-			this.browser.removeEventListener('load', this, true);
-			this.browser.removeEventListener('DOMTitleChanged', this, true);
+			this.window.removeEventListener(this.EVENT_TYPE_TAB_LOADED, this, true);
 			this.document.removeEventListener(this.EVENT_TYPE_DISABLED, this, true);
 
 			delete this.window;

@@ -303,6 +303,9 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 						this.suspend(tab);
 					}).bind(this), 500);
 				}
+				let event = this.document.createEvent('Events');
+				event.initEvent(this.EVENT_TYPE_TAB_LOADED, true, false);
+				tab.dispatchEvent(event);
 				return;
 		}
 	},
