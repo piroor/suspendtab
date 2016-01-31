@@ -13,7 +13,7 @@ var SS = Cc['@mozilla.org/browser/sessionstore;1']
 var { Services } = Cu.import('resource://gre/modules/Services.jsm', {});
 var { setTimeout, clearTimeout } = Cu.import('resource://gre/modules/Timer.jsm', {});
 
-var { SessionStoreInternal } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
+var { SessionStoreInternal, TabRestoreQueue } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
 //var { TAB_STATE_NEEDS_RESTORE } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
 //it can't be exported because it is defined by ES6 const.
 var TAB_STATE_NEEDS_RESTORE = 1;
@@ -462,6 +462,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 		browser.messageManager.sendAsyncMessage('SessionStore:restoreHistory',
 		                                        {tabData: state, epoch: epoch});
+
+		TabRestoreQueue.add(aTab);
 		// ==END==
 
 
