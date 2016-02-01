@@ -103,8 +103,8 @@ SuspendTab.prototype = inherit(require('const'), {
 	{
 		var tabs = Array.slice(this.tabs, 0);
 		return tabs.sort(function(aA, aB) {
-			var a = aA.__suspendtab__lastFocused || aA.__suspendtab__openedAt || 0;
-			var b = aB.__suspendtab__lastFocused || aB.__suspendtab__openedAt || 0;
+			var a = aA.__suspendtab__lastFocused || aA.__suspendtab__openedAt || aA._tPos || 0;
+			var b = aB.__suspendtab__lastFocused || aB.__suspendtab__openedAt || aB._tPos || 0;
 			return a - b;
 		});
 	},
@@ -331,10 +331,14 @@ SuspendTab.prototype = inherit(require('const'), {
 				return;
 		}
 		else {
+			if (this.debug)
+				dump('<suspending toggled tab '+tab._tPos+'>\n');
 			let suspended = this.suspend(tab);
 
 			if (TST && TST.isSubtreeCollapsed(tab)) {
 				TST.getDescendantTabs(tab).forEach(function(aTab) {
+					if (suspended && this.debug)
+						dump('  <suspending toggled descendant tab '+aTab._tPos+'>\n');
 					suspended = suspended && this.suspend(aTab);
 				}, this);
 			}
@@ -427,8 +431,11 @@ SuspendTab.prototype = inherit(require('const'), {
 	{
 		var tab = this.browser.mContextTab || this.browser.selectedTab;
 		Array.forEach(this.tabs, function(aTab) {
-			if (aTab != tab)
+			if (aTab != tab) {
+				if (this.debug)
+					dump('<suspending other tab '+aTab._tPos+'>\n');
 				this.suspend(aTab);
+			}
 		}, this);
 	},
 
@@ -445,8 +452,11 @@ SuspendTab.prototype = inherit(require('const'), {
 				if (!tab.parentNode || tab.selected)
 					return;
 
-				if (!this.autoSuspendNewBackgroundTabAfterLoad)
+				if (!this.autoSuspendNewBackgroundTabAfterLoad) {
+					if (this.debug)
+						dump('<suspending new background tab '+tab._tPos+'>\n');
 					this.suspend(tab, { newTabNotLoadedYet : true });
+				}
 			}).bind(this), 0);
 		}
 		else {
@@ -519,6 +529,8 @@ SuspendTab.prototype = inherit(require('const'), {
 				tabsOnMemory--; // decrement at first, for the current tab!
 		}
 		tabs.forEach(function(aTab) {
+			if (!this.isSuspendable(aTab))
+				return;
 			if (this.isSuspended(aTab) && !aReset)
 				return;
 			if (
@@ -533,8 +545,11 @@ SuspendTab.prototype = inherit(require('const'), {
 			}
 			if (!aTab.pinned && !aTab.selected) {
 				tabsOnMemory--;
-				if (tabsOnMemory < 0)
+				if (tabsOnMemory < 0) {
+					if (this.debug)
+						dump('<suspending too many tab '+aTab._tPos+'>\n');
 					this.suspend(aTab);
+				}
 			}
 		}, this);
 	},
@@ -544,7 +559,8 @@ SuspendTab.prototype = inherit(require('const'), {
 		if (
 			aTab.selected ||
 			aTab.pinned ||
-			aTab.hasAttribute('protected') // protected tab, by Tab Mix Plus or others
+			aTab.hasAttribute('protected') || // protected tab, by Tab Mix Plus or others ||
+			!this.internal.isSuspendable(aTab)
 			)
 			return false;
 
@@ -613,7 +629,8 @@ SuspendTab.prototype = inherit(require('const'), {
 			dump('  now       = '+now+'\n');
 		}
 		if (timestamp && now - timestamp >= this.autoSuspendTimeout) {
-			dump('  => suspend now!\n');
+			if (this.debug)
+				dump('<suspending expired tab '+tab._tPos+'>\n');
 			return this.suspend(aTab);
 		}
 
@@ -623,8 +640,11 @@ SuspendTab.prototype = inherit(require('const'), {
 				return;
 			aTab.__suspendtab__timestamp = 0;
 			aTab.__suspendtab__timer = null;
-			if (!aTab.selected && this.autoSuspend)
+			if (!aTab.selected && this.autoSuspend) {
+				if (this.debug)
+					dump('<suspending expired tab '+tab._tPos+' with timer>\n');
 				this.suspend(aTab);
+			}
 		}).bind(this), this.autoSuspendTimeout)
 
 		this.updateTooltip(aTab);
@@ -769,6 +789,8 @@ SuspendTab.prototype = inherit(require('const'), {
 				item.setAttribute('accesskey', bundle.getString('tab.suspendTree.accesskey'));
 				item.setAttribute('oncommand', collectTreeTabs + here(/*
 					tabs.forEach(function(aTab) {
+						if (SuspendTab.debug)
+							dump('<suspending tree '+aTab._tPos+'>\n');
 						SuspendTab.suspend(aTab);
 					});
 				*/));

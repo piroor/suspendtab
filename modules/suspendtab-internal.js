@@ -14,9 +14,9 @@ var { Services } = Cu.import('resource://gre/modules/Services.jsm', {});
 var { setTimeout, clearTimeout } = Cu.import('resource://gre/modules/Timer.jsm', {});
 
 var { SessionStoreInternal, TabRestoreQueue } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
-//var { TAB_STATE_NEEDS_RESTORE } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
-//it can't be exported because it is defined by ES6 const.
 var TAB_STATE_NEEDS_RESTORE = 1;
+var TAB_STATE_RESTORING = 2;
+var TAB_STATE_WILL_RESTORE = 2;
 //var { TabRestoreStates } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
 var { TabState } = Cu.import('resource:///modules/sessionstore/TabState.jsm', {});
 var { TabStateCache } = Cu.import('resource:///modules/sessionstore/TabStateCache.jsm', {});
@@ -91,11 +91,6 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		return prefs.getPref(this.domain + 'debug');
 	},
 
-	get saferSuspend()
-	{
-		return prefs.getPref(this.domain + 'saferSuspend');
-	},
-
 	get document()
 	{
 		return this.window.document;
@@ -138,24 +133,21 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 	isSuspended : function(aTab)
 	{
-		return this.isSuspendedBySelf(aTab) || this.isSuspendedBySS(aTab);
+		var browser = aTab.linkedBrowser;
+		return browser && browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE;
 	},
 
-	isSuspendedBySelf : function(aTab)
-	{
-		return SS.getTabValue(aTab, this.STATE);
-	},
-
-	isSuspendedBySS : function(aTab)
-//	isTabNeedToBeRestored: function(aTab)
+	isSuspendable : function(aTab)
 	{
 		var browser = aTab.linkedBrowser;
-//		// Firefox 25 and later. See: https://bugzilla.mozilla.org/show_bug.cgi?id=867142
-//		if (TabRestoreStates &&
-//			TabRestoreStates.has(browser))
-//			return TabRestoreStates.isNeedsRestore(browser);
-
-		return browser && browser.__SS_restoreState == 1;
+		return (
+			browser &&
+			!browser.__SS_restoreState &&
+			(
+				!SessionStoreInternal._windowBusyStates ||
+				!SessionStoreInternal._windowBusyStates.get(browser.ownerDocument.defaultView)
+			)
+		);
 	},
 
 	suspend : function(aTab, aOptions)
@@ -255,11 +247,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		aTab.setAttribute('pending', true);
 		aTab.setAttribute(this.SUSPENDED, true);
 
-		if (this.saferSuspend) {
-			if (this.debug)
-				dump(' => ready to restore '+aTab._tPos+'\n');
-			this.readyToResume(aTab);
-		}
+		this.readyToResume(aTab);
 
 		{
 			let event = this.document.createEvent('Events');
@@ -334,7 +322,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		if (!this.isSuspended(aTab))
 			return true;
 
-		if (this.isSuspendedBySS(aTab) && !aTab.selected) {
+		if (!aTab.selected) {
 			// Reloading action resumes the pending restoration.
 			// This will fire "SSTabRestored" event, then this method
 			// will be called again to restore actual history entries.
@@ -354,10 +342,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		if (!state)
 			return true;
 
-		delete aTab[this.READY];
 		fullStates.delete(aTab);
 
-		this.readyToResume(aTab);
 		SessionStoreInternal.restoreTabContent(aTab);
 
 		var event = this.document.createEvent('Events');
@@ -405,16 +391,9 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 	// because Firefox doesn't build DOM tree until they are actually loaded.
 	readyToResume : function(aTab)
 	{
-		if (!this.isSuspended(aTab) ||
-			aTab[this.READY])
-			return true;
-
-		if (this.isSuspendedBySS(aTab))
-			return true;
-
 		var state = this.getTabState(aTab);
 		if (!state)
-			return true;
+			return;
 
 		var browser = aTab.linkedBrowser;
 		var tabbrowser = this.browser;
@@ -476,11 +455,6 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 		TabRestoreQueue.add(aTab);
 		// ==END==
-
-
-		aTab[this.READY] = true;
-
-		return true;
 	}
 });
 SuspendTabInternal.isAvailable = isInternalAPIsAvailable;
