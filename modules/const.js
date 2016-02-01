@@ -39,6 +39,7 @@ var exports = {
 	STATE : 'suspendtab-state',
 	OPTIONS : 'suspendtab-options',
 	INDEX : 'suspendtab-current-index',
+	SUSPENDING : 'suspendtab-suspending',
 	SUSPENDED : 'suspendtab-suspended',
 	MENUITEM_AVAILABLE : 'suspendtab-available',
 	MENUITEM_ENABLED   : 'suspendtab-enabled',

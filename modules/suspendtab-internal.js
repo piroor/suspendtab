@@ -137,6 +137,11 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		return browser && browser.__SS_restoreState == TAB_STATE_NEEDS_RESTORE;
 	},
 
+	isSuspending : function(aTab)
+	{
+		return aTab[this.SUSPENDING];
+	},
+
 	isSuspendable : function(aTab)
 	{
 		var browser = aTab.linkedBrowser;
@@ -178,6 +183,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 		if (this.debug)
 			dump(' suspend '+aTab._tPos+'\n');
+
+		aTab[this.SUSPENDING] = true;
 
 		if (TabStateFlusher) {
 			return TabStateFlusher.flush(browser)
@@ -263,6 +270,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 		this.readyToResume(aTab);
 
+		delete aTab[this.SUSPENDING];
+
 		{
 			let event = this.document.createEvent('Events');
 			event.initEvent(this.EVENT_TYPE_SUSPENDED, true, false);
@@ -311,6 +320,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 						if (!tab.parentNode)
 							return;
 						delete tab.__suspendtab__suspendAfterLoad;
+						if (tab.selected)
+							return;
 						this.suspend(tab);
 					}).bind(this), 500);
 				}
@@ -333,28 +344,39 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 	resumeOne : function(aTab, aIdMap, aDocIdentMap)
 	{
+		if (this.isSuspending(aTab)) {
+			return new Promise((function(aResolve, aReject) {
+				var onSuspended = (function(aEvent) {
+					aTab.removeEventListener(aEvent.type, onSuspended, false);
+					this.resumeOne(aTab, aIdMap, aDocIdentMap)
+						.then(aResolve);
+				}).bind(this);
+				aTab.addEventListener(this.EVENT_TYPE_SUSPENDED, onSuspended, false);
+			}).bind(this));
+		}
+
 		if (!this.isSuspended(aTab))
-			return true;
+			return Promise.resolve(true);
 
 		if (!aTab.selected) {
 			// Reloading action resumes the pending restoration.
 			// This will fire "SSTabRestored" event, then this method
 			// will be called again to restore actual history entries.
 			aTab.linkedBrowser.reload();
-			return true;
+			return Promise.resolve(true);
 		}
 
 		{
 			let event = this.document.createEvent('Events');
 			event.initEvent(this.EVENT_TYPE_RESUMING, true, true);
 			if (!aTab.dispatchEvent(event))
-				return false;
+				return Promise.resolve(false);
 		}
 
 		var state = this.getTabState(aTab, true);
 		var options = this.getTabOptions(aTab, true);
 		if (!state)
-			return true;
+			return Promise.resolve(true);
 
 		fullStates.delete(aTab);
 
@@ -366,6 +388,8 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 		if (this.debug)
 			aTab.setAttribute('tooltiptext', aTab.label);
+
+		return Promise.resolve(true);
 	},
 
 	resumeAll : function(aRestoreOnlySuspendedByMe)
