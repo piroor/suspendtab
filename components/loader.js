@@ -2,7 +2,7 @@
  * @fileOverview Loader module for restartless addons
  * @author       YUKI "Piro" Hiroshi
  * @contributor  Infocatcher
- * @version      15
+ * @version      16
  *
  * @license
  *   The MIT License, Copyright (c) 2010-2015 YUKI "Piro" Hiroshi.
@@ -45,6 +45,9 @@ try {
 } catch(e) {
 	Components.utils.reportError(new Error('failed to load Console.jsm'));
 }
+
+var { Promise } = Components.utils.import('resource://gre/modules/Promise.jsm', {});
+
 var _namespacePrototype = {
 		Cc : Components.classes,
 		Ci : Components.interfaces,
@@ -60,6 +63,7 @@ var _namespacePrototype = {
 		inherit : function(aParent, aExtraProperties) {
 			return inherit(aParent, aExtraProperties);
 		},
+		Promise : Promise,
 	};
 var _namespaces;
 
@@ -103,7 +107,7 @@ function load(aURISpec, aExportTargetForImport, aExportTargetForRequire, aRoot)
 	catch(e) {
 		let message = 'Loader::load('+aURISpec+') failed!\n'+e+'\n';
 		dump(message);
-		Components.utils.reportError(message + e.stack);
+		Components.utils.reportError(message + e.stack.replace(/( -> )/g, '\n$1'));
 		throw e;
 	}
 	_exportForImport(ns, aExportTargetForImport);
@@ -323,19 +327,42 @@ function _createFakeLocation(aURI)
 
 function _callHandler(aHandler, aReason)
 {
+	var handlers = [];
 	for (var i in _namespaces)
 	{
-		try {
-			if (_namespaces[i][aHandler] &&
-				typeof _namespaces[i][aHandler] == 'function')
-				_namespaces[i][aHandler](aReason);
-		}
-		catch(e) {
-			let message = i+'('+aHandler+', '+aReason+')\n'+e+'\n';
-			dump(message);
-			Components.utils.reportError(message + e.stack);
-		}
+		if (_namespaces[i][aHandler] &&
+			typeof _namespaces[i][aHandler] == 'function')
+			handlers.push({
+				key       : i,
+				namespace : _namespaces[i],
+				handler   : _namespaces[i][aHandler]
+			});
 	}
+
+	return new Promise(function(aResolve, aReject) {
+		var processHandler = function() {
+			var handler = handlers.shift();
+			if (!handler)
+				return aResolve();
+
+			try {
+				var result = handler.handler.call(handler.namespace, aReason);
+			}
+			catch(e) {
+				let message = i+'('+aHandler+', '+aReason+')\n'+e+'\n';
+				dump(message);
+				Components.utils.reportError(message + e.stack.replace(/( -> )/g, '\n$1'));
+			}
+
+			if (result && typeof result.then == 'function') {
+				result.then(processHandler);
+			}
+			else {
+				processHandler();
+			}
+		};
+		processHandler();
+	});
 }
 
 function registerResource(aName, aRoot)
@@ -367,30 +394,32 @@ function uninstall(aReason)
 /** Handler for "shutdown" of the bootstrap.js */
 function shutdown(aReason)
 {
-	_callHandler('shutdown', aReason);
+	_callHandler('shutdown', aReason)
+		.then(function() {
+			for each (let ns in _namespaces)
+			{
+				for (let i in ns.exports)
+				{
+					if (ns.exports.hasOwnProperty(i))
+						delete ns.exports[i];
+				}
+			}
+			_namespaces = void(0);
+			_namespacePrototype = void(0);
 
-	for each (let ns in _namespaces)
-	{
-		for (let i in ns.exports)
-		{
-			if (ns.exports.hasOwnProperty(i))
-				delete ns.exports[i];
-		}
-	}
-	_namespaces = void(0);
-	_namespacePrototype = void(0);
+			IOService = void(0);
+			FileHandler = void(0);
+			Promise = void(0);
 
-	IOService = void(0);
-	FileHandler = void(0);
-
-	load = void(0);
-	_exportSymbols = void(0);
-	exists = void(0);
-	_createNamespace = void(0);
-	_callHandler = void(0);
-	registerResource = void(0);
-	unregisterResource = void(0);
-	install = void(0);
-	uninstall = void(0);
-	shutdown = void(0);
+			load = void(0);
+			_exportSymbols = void(0);
+			exists = void(0);
+			_createNamespace = void(0);
+			_callHandler = void(0);
+			registerResource = void(0);
+			unregisterResource = void(0);
+			install = void(0);
+			uninstall = void(0);
+			shutdown = void(0);
+		});
 }
