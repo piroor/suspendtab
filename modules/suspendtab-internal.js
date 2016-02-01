@@ -16,7 +16,7 @@ var { setTimeout, clearTimeout } = Cu.import('resource://gre/modules/Timer.jsm',
 var { SessionStoreInternal, TabRestoreQueue } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
 var TAB_STATE_NEEDS_RESTORE = 1;
 var TAB_STATE_RESTORING = 2;
-var TAB_STATE_WILL_RESTORE = 2;
+var TAB_STATE_WILL_RESTORE = 3;
 //var { TabRestoreStates } = Cu.import('resource:///modules/sessionstore/SessionStore.jsm', {});
 var { TabState } = Cu.import('resource:///modules/sessionstore/TabState.jsm', {});
 var { TabStateCache } = Cu.import('resource:///modules/sessionstore/TabStateCache.jsm', {});
@@ -142,7 +142,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		var browser = aTab.linkedBrowser;
 		return (
 			browser &&
-			!browser.__SS_restoreState &&
+			browser.__SS_restoreState != TAB_STATE_NEEDS_RESTORE &&
 			(
 				!SessionStoreInternal._windowBusyStates ||
 				!SessionStoreInternal._windowBusyStates.get(browser.ownerDocument.defaultView)
@@ -152,32 +152,46 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 	suspend : function(aTab, aOptions)
 	{
+		return new Promise((function(aResolve, aReject) {
+		var browser = aTab.linkedBrowser;
+		if (browser.__SS_restoreState == TAB_STATE_RESTORING ||
+			browser.__SS_restoreState == TAB_STATE_WILL_RESTORE) {
+			var onRestored = (function() {
+				aTab.removeEventListener('SSTabRestored', onRestored, false);
+				this.suspend(aTab, aOptions)
+					.then(aResolve);
+			}).bind(this);
+			aTab.addEventListener('SSTabRestored', onRestored, false);
+			return;
+		}
+
 		aOptions = aOptions || {};
 		if (this.isSuspended(aTab))
-			return true;
+			return aResolve(true);
 
 		{
 			let event = this.document.createEvent('Events');
 			event.initEvent(this.EVENT_TYPE_SUSPENDING, true, true);
 			if (!aTab.dispatchEvent(event))
-				return false;
+				return aResolve(false);
 		}
 
 		if (this.debug)
 			dump(' suspend '+aTab._tPos+'\n');
 
-		var browser = aTab.linkedBrowser;
 		if (TabStateFlusher) {
 			return TabStateFlusher.flush(browser)
 				.then((function() {
 					return this.suspendPostProcess(aTab, aOptions);
-				}).bind(this));
+				}).bind(this))
+				.then(aResolve);
 		}
 		else {
 			TabState.flush(browser);
 			this.suspendPostProcess(aTab, aOptions);
-			return true;
+			return aResolve(true);
 		}
+		}).bind(this));
 	},
 	suspendPostProcess : function(aTab, aOptions)
 	{
