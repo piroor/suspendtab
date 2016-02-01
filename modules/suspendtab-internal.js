@@ -104,6 +104,10 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 	{
 		return this.window.gBrowser;
 	},
+	get tabs()
+	{
+		return this.browser.mTabContainer.childNodes;
+	},
 
 	init : function(aWindow)
 	{
@@ -117,12 +121,6 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 	destroy : function(aIsGoingToBeDisabled)
 	{
-		if (aIsGoingToBeDisabled) {
-			let event = this.document.createEvent('Events');
-			event.initEvent(this.EVENT_TYPE_DISABLED, true, false);
-			this.document.dispatchEvent(event);
-		}
-
 		this.destroyed = true;
 
 		this.window.messageManager.broadcastAsyncMessage(this.MESSAGE_TYPE, {
@@ -178,21 +176,23 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 		var browser = aTab.linkedBrowser;
 		if (TabStateFlusher) {
-			TabStateFlusher.flush(browser)
+			return TabStateFlusher.flush(browser)
 				.then((function() {
-					this.suspendPostProcess(aTab, aOptions);
+					return this.suspendPostProcess(aTab, aOptions);
 				}).bind(this));
 		}
 		else {
 			TabState.flush(browser);
 			this.suspendPostProcess(aTab, aOptions);
+			return true;
 		}
-
-		return true;
 	},
 	suspendPostProcess : function(aTab, aOptions)
 	{
-		if (!aTab.parentNode)
+		if (
+			!aTab.parentNode || // already removed tab
+			!TabState // service already destroyed
+			)
 			return;
 
 		var label   = aTab.label;
@@ -270,11 +270,13 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 	handleMessage : function(aMessage)
 	{
+/*
 		if (this.debug) {
 			dump('*********************handleMessage*******************\n');
 			dump('TARGET IS: '+aMessage.target.localName+'\n');
 			dump(JSON.stringify(aMessage.json)+'\n');
 		}
+*/
 
 		var tab;
 		try {
@@ -322,9 +324,9 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 		if (aTabs instanceof this.window.Element)
 			aTabs = [aTabs];
 
-		aTabs.forEach(function(aTab) {
-			this.resumeOne(aTab);
-		}, this);
+		return Promise.all(aTabs.map(function(aTab) {
+			return this.resumeOne(aTab);
+		}, this));
 	},
 
 	resumeOne : function(aTab, aIdMap, aDocIdentMap)
@@ -364,6 +366,15 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 		if (this.debug)
 			aTab.setAttribute('tooltiptext', aTab.label);
+	},
+
+	resumeAll : function(aRestoreOnlySuspendedByMe)
+	{
+		return Promise.all(Array.map(this.tabs, function(aTab) {
+			if (!aRestoreOnlySuspendedByMe ||
+				aTab.getAttribute(this.SUSPENDED) == 'true')
+				return this.resumeOne(aTab);
+		}, this));
 	},
 
 	getTabState : function(aTab, aClear)
@@ -476,12 +487,27 @@ SuspendTabInternal.isAvailable = isInternalAPIsAvailable;
 
 SuspendTabInternal.instances = [];
 
+SuspendTabInternal.resumeAll = function(aRestoreOnlySuspendedByMe) {
+	return Promise.all(this.instances.map(function(aInstance) {
+		return aInstance.resumeAll(aRestoreOnlySuspendedByMe);
+	}));
+};
+
 function shutdown(aReason)
 {
-	SuspendTabInternal.instances.forEach(function(aInstance) {
-		aInstance.destroy(aReason == 'ADDON_DISABLE');
-	});
-
+	if (aReason == 'ADDON_DISABLE')
+		return SuspendTabInternal.resumeAll(true)
+				.then(shutdownPostProcess);
+	else
+		return shutdownPostProcess();
+}
+function shutdownPostProcess(aReason)
+{
+	return Promise.all(SuspendTabInternal.instances.map(function(aInstance) {
+		return aInstance.destroy(aReason == 'ADDON_DISABLE');
+	}))
+	.then(function() {
+	SuspendTabInternal.instances = [];
 	setTimeout = clearTimeout = undefined;
 
 	SS = undefined;
@@ -496,4 +522,5 @@ function shutdown(aReason)
 	SuspendTabInternal = undefined;
 
 	shutdown = undefined;
+	});
 }

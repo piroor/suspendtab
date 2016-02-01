@@ -179,9 +179,6 @@ SuspendTab.prototype = inherit(require('const'), {
 
 			case 'unload':
 				return this.destroy();
-
-			case this.EVENT_TYPE_DISABLED:
-				return this.resumeAll(true);
 		}
 	},
 
@@ -670,12 +667,12 @@ SuspendTab.prototype = inherit(require('const'), {
 
 	resumeAll : function(aRestoreOnlySuspendedByMe)
 	{
-		Array.forEach(this.tabs, function(aTab) {
+		return Promise.all(Array.map(this.tabs, function(aTab) {
 			this.cancelTimer(aTab);
 			if (!aRestoreOnlySuspendedByMe ||
 				aTab.getAttribute(this.SUSPENDED) == 'true')
-				this.resume(aTab);
-		}, this);
+				return this.resume(aTab);
+		}, this));
 	},
 
 	reserveGC : function()
@@ -712,7 +709,6 @@ SuspendTab.prototype = inherit(require('const'), {
 		this.window.addEventListener('SSTabRestoring', this, true);
 		this.window.addEventListener('SSTabRestored', this, true);
 		this.window.addEventListener(this.EVENT_TYPE_TAB_LOADED, this, true);
-		this.document.addEventListener(this.EVENT_TYPE_DISABLED, this, true);
 
 		this.trySuspendBackgroundTabs();
 
@@ -862,7 +858,6 @@ SuspendTab.prototype = inherit(require('const'), {
 			this.window.removeEventListener('SSTabRestoring', this, true);
 			this.window.removeEventListener('SSTabRestored', this, true);
 			this.window.removeEventListener(this.EVENT_TYPE_TAB_LOADED, this, true);
-			this.document.removeEventListener(this.EVENT_TYPE_DISABLED, this, true);
 
 			delete this.window;
 		}
@@ -918,24 +913,28 @@ SuspendTab.prototype = inherit(require('const'), {
 		if (this.isSuspended(aTab))
 			return true;
 
-		if (this.internal &&
-			!this.internal.destroyed &&
-			!this.internal.suspend(aTab, aOptions))
+		if (!this.internal ||
+			this.internal.destroyed)
 			return false;
 
-		if (aTab.selected) {
-			let nextFocused = this.getNextFocusedTab(aTab);
-			if (nextFocused)
-				this.browser.selectedTab = nextFocused;
-		}
-		this.reserveGC();
+		return this.internal.suspend(aTab, aOptions)
+			.then((function() {
+				if (!this.window) // service already destroyed
+					return;
+				if (aTab.selected) {
+					let nextFocused = this.getNextFocusedTab(aTab);
+					if (nextFocused)
+						this.browser.selectedTab = nextFocused;
+				}
+				this.reserveGC();
 
-		return true;
+				return true;
+			}).bind(this));
 	},
 
 	resume : function(aTabs)
 	{
-		this.internal &&
+		return this.internal &&
 			!this.internal.destroyed &&
 				this.internal.resume(aTabs);
 	}
@@ -944,19 +943,26 @@ SuspendTab.prototype = inherit(require('const'), {
 SuspendTab.instances = [];
 
 SuspendTab.resumeAll = function(aRestoreOnlySuspendedByMe) {
-	this.instances.forEach(function(aInstance) {
-		aInstance.resumeAll(aRestoreOnlySuspendedByMe);
-	});
+	return Promise.all(this.instances.map(function(aInstance) {
+		return aInstance.resumeAll(aRestoreOnlySuspendedByMe);
+	}));
 };
 
 function shutdown(aReason)
 {
 	if (aReason == 'ADDON_DISABLE')
-		SuspendTab.resumeAll(true);
-
-	SuspendTab.instances.forEach(function(aInstance) {
-		aInstance.destroy();
-	});
+		return SuspendTab.resumeAll(true)
+				.then(shutdownPostProcess);
+	else
+		return shutdownPostProcess();
+}
+function shutdownPostProcess(aReason)
+{
+	return Promise.all(SuspendTab.instances.map(function(aInstance) {
+		return aInstance.destroy(aReason == 'ADDON_DISABLE');
+	}))
+	.then(function() {
+	SuspendTab.instances = [];
 
 	WindowManager = undefined;
 	setTimeout = clearTimeout = undefined;
@@ -968,4 +974,6 @@ function shutdown(aReason)
 	SuspendTabInternal = undefined;
 
 	shutdown = undefined;
+	shutdownPostProcess = undefined;
+	});
 }
