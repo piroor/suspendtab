@@ -930,6 +930,15 @@ SuspendTab.prototype = inherit(require('const'), {
 		);
 	},
 
+	isSuspending : function(aTab)
+	{
+		return (
+			this.internal &&
+			!this.internal.destroyed &&
+			this.internal.isSuspending(aTab)
+		);
+	},
+
 	suspend : function(aTab, aOptions)
 	{
 		if (this.isSuspended(aTab))
