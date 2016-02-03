@@ -1,6 +1,7 @@
 # History
 
  - master/HEAD
+ - 1.0.2016020401
    * Works on Nightly 47.0a1.
    * Supports e10s.
    * Add "Don't suspend this site automatically" to the tab context menu.
