@@ -630,7 +630,7 @@ SuspendTab.prototype = inherit(require('const'), {
 		}
 		if (timestamp && now - timestamp >= this.autoSuspendTimeout) {
 			if (this.debug)
-				dump('<suspending expired tab '+tab._tPos+'>\n');
+				dump('<suspending expired tab '+aTab._tPos+'>\n');
 			return this.suspend(aTab);
 		}
 
