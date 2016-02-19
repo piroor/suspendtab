@@ -655,7 +655,7 @@ SuspendTab.prototype = inherit(require('const'), {
 		if (!this.debug || this.isSuspended(aTab) || aTab.selected) {
 			if (aTab.getAttribute('tooltiptext') &&
 				aTab.getAttribute('tooltiptext') == aTab.getAttribute('suspendtab-tooltiptext'))
-				aTab.setAttribute('tooltiptext', aTab.visibleLabel || aTab.label);
+				aTab.removeAttribute('tooltiptext');
 			aTab.removeAttribute('suspendtab-tooltiptext');
 			return;
 		}
