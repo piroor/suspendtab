@@ -229,6 +229,11 @@ SuspendTab.prototype = inherit(require('const'), {
 		}
 
 		{
+			let item = this.tabContextSuspendOthersItem;
+			item.hidden = !prefs.getPref(this.domain + 'menu.' + item.id);
+		}
+
+		{
 			let item = this.tabContextAddDomainExceptionItem;
 			if (this.isBlocked(tab))
 				item.setAttribute('checked', true);
@@ -270,6 +275,13 @@ SuspendTab.prototype = inherit(require('const'), {
 		{
 			let item = this.contentContextItem;
 			item.disabled = isLastTab;
+			item.hidden = !prefs.getPref(this.domain + 'menu.' + item.id);
+			if (!item.hidden)
+				visibleItemsCount++;
+		}
+
+		{
+			let item = this.contentContextSuspendOthersItem;
 			item.hidden = !prefs.getPref(this.domain + 'menu.' + item.id);
 			if (!item.hidden)
 				visibleItemsCount++;
