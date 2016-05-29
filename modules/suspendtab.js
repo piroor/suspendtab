@@ -366,12 +366,9 @@ SuspendTab.prototype = inherit(require('const'), {
 		if (tabs.length == 1 && tabs[0] == aTab)
 			tabs = this.tabs;
 
-		// skip suspending tabs
-		tabs = tabs.filter(function(aOtherTab) {
-			return aOtherTab == aTab || !this.internal.getTabState(aOtherTab);
-		}, this);
-		if (!tabs.length)
-			return null;
+		var focusableTabs = Array.filter(tabs, this.isTabFocusable, this);
+		if (tabs.length > 0)
+			tabs = focusableTabs;
 
 		var index = Array.slice(tabs).indexOf(aTab);
 		switch (prefs.getPref(this.domain + 'autoSuspend.nextFocus')) {
@@ -380,15 +377,9 @@ SuspendTab.prototype = inherit(require('const'), {
 				if (TST) {
 					let nextFocused = !TST.isSubtreeCollapsed(aTab) && TST.getFirstChildTab(aTab);
 					nextFocused = nextFocused || TST.getNextSiblingTab(aTab) || TST.getPreviousSiblingTab(aTab);
-					if (nextFocused)
+					if (nextFocused && this.isTabFocusable(nextFocused))
 						return nextFocused;
 
-					let tabs = Array.filter(this.tabs, function(aTab) {
-							return (
-								aTab.hidden &&
-								!this.internal.getTabState(aOtherTab) // skip suspending tabs
-							);
-						}, this);
 					return tabs.length ? tabs[0] : null ;
 				}
 			case this.NEXT_FOCUS_FOLLOWING:
@@ -414,6 +405,15 @@ SuspendTab.prototype = inherit(require('const'), {
 			case this.NEXT_FOCUS_LAST:
 				return tabs[tabs.length - 1];
 		}
+	},
+	isTabFocusable : function(aTab)
+	{
+		return (
+			!aTab.hidden &&
+			!this.internal.isSuspended(aTab) &&
+			!this.internal.isSuspending(aTab) &&
+			!this.internal.getTabState(aTab)
+		);
 	},
 
 	onToggleExceptionCommand : function(aEvent)
