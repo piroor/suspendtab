@@ -19,6 +19,7 @@
  *
  * Contributor(s):: YUKI "Piro" Hiroshi <piro.outsider.reflex@gmail.com>
  *                  YosukeM (Yosuke Morimoto) https://github.com/YosukeM
+ *                  vzvu3k6k https://github.com/vzvu3k6k
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
