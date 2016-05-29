@@ -367,7 +367,7 @@ SuspendTab.prototype = inherit(require('const'), {
 			tabs = this.tabs;
 
 		var focusableTabs = Array.filter(tabs, this.isTabFocusable, this);
-		if (tabs.length > 0)
+		if (focusableTabs.length > 0)
 			tabs = focusableTabs;
 
 		var index = Array.slice(tabs).indexOf(aTab);
