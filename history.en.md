@@ -1,6 +1,7 @@
 # History
 
  - master/HEAD
+ - 1.0.2016061501
    * Don't select pending tab after suspending of the current tab, if possible.
    * Respect preferences for visibility of "Suspend Other Items" menu items.
  - 1.0.2016020401
