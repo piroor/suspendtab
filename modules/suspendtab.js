@@ -102,7 +102,7 @@ SuspendTab.prototype = inherit(require('const'), {
 	},
 	get tabsFromOldToNew()
 	{
-		var tabs = Array.slice(this.tabs, 0);
+		var tabs = [...this.tabs];
 		return tabs.sort(function(aA, aB) {
 			var a = aA.__suspendtab__lastFocused || aA.__suspendtab__openedAt || aA._tPos || 0;
 			var b = aB.__suspendtab__lastFocused || aB.__suspendtab__openedAt || aB._tPos || 0;
@@ -366,11 +366,14 @@ SuspendTab.prototype = inherit(require('const'), {
 		if (tabs.length == 1 && tabs[0] == aTab)
 			tabs = this.tabs;
 
-		var focusableTabs = Array.filter(tabs, this.isTabFocusable, this);
+		if (!Array.isArray(tabs))
+			tabs = [...tabs];
+
+		var focusableTabs = tabs.filter(this.isTabFocusable, this);
 		if (focusableTabs.length > 0)
 			tabs = focusableTabs;
 
-		var index = Array.slice(tabs).indexOf(aTab);
+		var index = tabs.indexOf(aTab);
 		switch (prefs.getPref(this.domain + 'autoSuspend.nextFocus')) {
 			default:
 				let TST = this.browser.treeStyleTab;
@@ -443,13 +446,13 @@ SuspendTab.prototype = inherit(require('const'), {
 	onSuspendOthersCommand : function(aEvent)
 	{
 		var tab = this.browser.mContextTab || this.browser.selectedTab;
-		Array.forEach(this.tabs, function(aTab) {
-			if (aTab != tab) {
+		for (let oneTab of this.tabs) {
+			if (oneTab != tab) {
 				if (this.debug)
-					dump('<suspending other tab '+aTab._tPos+'>\n');
-				this.suspend(aTab);
+					dump('<suspending other tab '+oneTab._tPos+'>\n');
+				this.suspend(oneTab);
 			}
-		}, this);
+		}
 	},
 
 	onTabOpen : function(aEvent)
@@ -533,7 +536,7 @@ SuspendTab.prototype = inherit(require('const'), {
 
 	trySuspendBackgroundTabs : function(aReset)
 	{
-		var tabs = Array.slice(this.tabs, 0);
+		var tabs = [...this.tabs];
 		var tabsOnMemory = tabs.length;
 		if (this.autoSuspendTooManyTabs) {
 			tabs = this.tabsFromNewToOld;
@@ -609,9 +612,10 @@ SuspendTab.prototype = inherit(require('const'), {
 
 	cancelTimers : function()
 	{
-		Array.forEach(this.tabs, function(aTab) {
-			this.cancelTimer(aTab);
-		}, this);
+		for (let tab of this.tabs)
+		{
+			this.cancelTimer(tab);
+		}
 	},
 
 	cancelTimer : function(aTab)
@@ -700,7 +704,7 @@ SuspendTab.prototype = inherit(require('const'), {
 
 	resumeAll : function(aRestoreOnlySuspendedByMe)
 	{
-		return Promise.all(Array.map(this.tabs, function(aTab) {
+		return Promise.all([...this.tabs].map(function(aTab) {
 			this.cancelTimer(aTab);
 			if (!aRestoreOnlySuspendedByMe ||
 				aTab.getAttribute(this.SUSPENDED) == 'true')

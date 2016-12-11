@@ -394,7 +394,7 @@ SuspendTabInternal.prototype = inherit(require('const'), {
 
 	resumeAll : function(aRestoreOnlySuspendedByMe)
 	{
-		return Promise.all(Array.map(this.tabs, function(aTab) {
+		return Promise.all([...this.tabs].map(function(aTab) {
 			if (!aRestoreOnlySuspendedByMe ||
 				aTab.getAttribute(this.SUSPENDED) == 'true')
 				return this.resumeOne(aTab);
