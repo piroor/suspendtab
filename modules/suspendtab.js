@@ -98,7 +98,7 @@ SuspendTab.prototype = inherit(require('const'), {
 	},
 	get tabs()
 	{
-		return this.browser.mTabContainer.childNodes;
+		return this.browser.tabContainer.childNodes;
 	},
 	get tabsFromOldToNew()
 	{
