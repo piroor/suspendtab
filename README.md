@@ -7,5 +7,6 @@ Currently this addon is not maintained for recent versions of Firefox. There are
 * [UnloadTabs](https://addons.mozilla.org/firefox/addon/unload-tabs/)
 * [Tab Unloader](https://addons.mozilla.org/firefox/addon/tab-unloader-we/)
 * [Unload Tab](https://addons.mozilla.org/firefox/addon/unload-tab/)
+* [Auto Tab Discard](https://addons.mozilla.org/firefox/addon/auto-tab-discard/)
 
 Especially the last one also contains "whitelist" feature for auto unloading.
