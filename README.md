@@ -9,4 +9,4 @@ Currently this addon is not maintained for recent versions of Firefox. There are
 * [Unload Tab](https://addons.mozilla.org/firefox/addon/unload-tab/)
 * [Auto Tab Discard](https://addons.mozilla.org/firefox/addon/auto-tab-discard/)
 
-Especially the last one also contains "whitelist" feature for auto unloading.
+Especially the last two also contains "whitelist" feature for auto unloading.
